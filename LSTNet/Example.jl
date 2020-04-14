@@ -8,7 +8,7 @@ using Flux, Plots, BSON
 include("LSTnet.jl")
 
 # Load some sample data
-BSON.@load "SampleData.bson" input target
+BSON.@load "../data/SampleData.bson" input target
 
 # Define the network architecture
 inputsize = size(input,1)

@@ -82,7 +82,7 @@ Base.show(io::IO, l::SkipGRUCell) =
 """
     SkipGRU(in::Integer, out::Integer, p::Integer)
 
-Skip Gated Recurrent Unit layer with skip length `p . The hidden state is recalled
+Skip Gated Recurrent Unit layer with skip length `p`. The hidden state is recalled
 from `p` steps prior to the current calculation.
 """
 SkipGRU(a...; ka...) = Flux.Recur(SkipGRUCell(a...; ka...))
