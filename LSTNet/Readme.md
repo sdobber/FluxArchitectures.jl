@@ -1,6 +1,6 @@
 # LSTNet
 
-This "Long- and Short-term Time-series network" is based on the paper by [Lai et. al.](https://arxiv.org/abs/1703.07015).
+This "Long- and Short-term Time-series network" is based on the paper by [Lai et. al.](https://arxiv.org/abs/1703.07015). See also the corresponding [blog post](https://sdobber.github.io/FA_LSTNet/).
 
 
 ## Network Structure
