@@ -71,7 +71,7 @@ function DARNN(inp::Integer, encodersize::Integer, decodersize::Integer, poollen
 	decoder_fc = Dense(encodersize + 1, 1)
 	decoder_fc_final = Dense(decodersize + encodersize, 1, initW=initW, initb=initb)
 
-	DARNNCell(encoder_lstm, encoder_attn, decoder_lstm, decoder_attn, decoder_fc,
+	return DARNNCell(encoder_lstm, encoder_attn, decoder_lstm, decoder_attn, decoder_fc,
 	 		  decoder_fc_final, encodersize, decodersize, orig_idx, poollength)
 end
 
