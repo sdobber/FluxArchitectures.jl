@@ -8,20 +8,25 @@ using Flux, Plots, BSON
 using Statistics
 include("StackedLSTM.jl")
 include("TPALSTM.jl")
+include("../data/dataloader.jl")
 
 # Load some sample data
-BSON.@load "../data/SampleData.bson" input target
+poollength = 10
+horizon = 6
+datalength = 5000
+input, target = get_data(:solar, poollength, datalength, horizon)
+# Quick normalization
+input = input./50 .- 0.3f0; target = target./50 .- 0.3f0
 
 # Define the network architecture
 inputsize = size(input,1)
-poolrows = 6
 hiddensize = 10
 layers = 2
 filternum = 32
 filtersize = 1
 
 # Define the neural net
-model = TPALSTM(inputsize, hiddensize, poolrows, layers, filternum, filtersize)
+model = TPALSTM(inputsize, hiddensize, poollength, layers, filternum, filtersize)
 
 # MSE loss
 function loss(x,y)
@@ -40,5 +45,5 @@ cb = function()
 end
 
 # Training loop
-Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target),50),
-            ADAM(0.007), cb=cb)
+Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target),10),
+            ADAM(0.01), cb=cb)

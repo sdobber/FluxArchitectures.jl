@@ -7,18 +7,23 @@ using Pkg; Pkg.activate("."); Pkg.instantiate()
 using Flux, Plots, BSON
 using Statistics
 include("DARNN.jl")
+include("../data/dataloader.jl")
 
 # Load some sample data
-BSON.@load "../data/SampleData.bson" input target
+poollength = 10
+horizon = 6
+datalength = 5000
+input, target = get_data(:solar, poollength, datalength, horizon)
+# Quick normalization
+input = input./50 .- 0.3f0; target = target./50 .- 0.3f0
 
 # Define the network architecture
 inputsize = size(input,1)
 encodersize = 10
 decodersize = 10
-poolrows=6
 
 # Define the neural net
-model = DARNN(inputsize, encodersize, decodersize, poolrows, 25)
+model = DARNN(inputsize, encodersize, decodersize, poollength, 1)
 
 # MSE loss
 function loss(x,y)
