@@ -16,6 +16,8 @@ For some more in-depth descriptions of the different models, please also have a 
 * TPA-LSTM: The Temporal Pattern Attention LSTM network is based on the paper "Temporal Pattern Attention for Multivariate Time
 Series Forecasting" by [Shih et. al.](https://arxiv.org/pdf/1809.04206v2.pdf).
 
+* DSANet: The "Dual Self-Attention Network for Multivariate Time Series Forecasting" is based on the paper by [Siteng Huang et. al.](https://kyonhuang.top/files/Huang-DSANet.pdf)
+
 
 ## Example data
 
