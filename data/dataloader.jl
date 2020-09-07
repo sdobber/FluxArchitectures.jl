@@ -8,7 +8,7 @@ Function for importing one of the sample datasets in the repository. `dataset` c
 timesteps to pool for the model, `datalength` determines the batch size of the output data,
 and `horizon` determines the number of time steps that should be forecasted by the model.
 """
-function get_data(dataset, poollength, datalength, horizon)
+function get_data(dataset, poollength, datalength, horizon; normalise=true)
     admissible = [:solar, :traffic, :exchange_rate, :electricity]
     dataset in admissible || error("Sample data not implemented")
 
@@ -18,6 +18,7 @@ function get_data(dataset, poollength, datalength, horizon)
     (dataset == :exchange_rate) && (BSON.@load "../data/exchange_rate.bson" inp_raw)
     (dataset == :electricity) && (BSON.@load "../data/electricity.bson" inp_raw)
 
+    (normalise == true) && (inp_raw = Flux.normalise(inp_raw, dims=1))
     out_ft = similar(inp_raw, size(inp_raw,2), poollength, 1, size(inp_raw,1))
     for i=0:poollength-1
         for j=poollength:min(datalength, size(inp_raw,1)-poollength)
