@@ -13,9 +13,6 @@ poollength = 10
 horizon = 6
 datalength = 5000
 input, target = get_data(:exchange_rate, poollength, datalength, horizon)
-# Quick normalization
-input = input./50; target = target./50
-
 
 # Define the network architecture
 inputsize = size(input,1)
@@ -29,7 +26,7 @@ model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength)
 # MSE loss
 function loss(x,y)
   Flux.reset!(model)
-  return Flux.mse(model(x),y)
+  return sum(abs2,model(x) - y')
 end
 
 # Callback for plotting the training

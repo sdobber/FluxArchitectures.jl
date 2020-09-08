@@ -14,8 +14,6 @@ poollength = 10
 horizon = 6
 datalength = 5000
 input, target = get_data(:solar, poollength, datalength, horizon)
-# Quick normalization
-input = input./50 .- 0.3f0; target = target./50 .- 0.3f0
 
 # Define the network architecture
 inputsize = size(input,1)
@@ -28,7 +26,7 @@ model = DARNN(inputsize, encodersize, decodersize, poollength, 1)
 # MSE loss
 function loss(x,y)
   Flux.reset!(model)
-  return Flux.mse(model(x),y)
+  return sum(abs2,model(x) - y')
 end
 
 # Callback for plotting the training
@@ -42,5 +40,5 @@ cb = function()
 end
 
 # Training loop
-Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target),50),
+Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target),10),
             ADAM(0.007), cb=cb)

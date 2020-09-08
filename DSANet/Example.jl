@@ -14,9 +14,6 @@ poollength = 10
 horizon = 6
 datalength = 5000
 input, target = get_data(:exchange_rate, poollength, datalength, horizon)
-# Quick normalization
-input = input .- 0.71f0; target = target .- 0.71f0
-
 
 # Define the network architecture
 inputsize = size(input,1)
@@ -34,7 +31,7 @@ model = DSANet(inputsize, poollength, local_length, n_kernels, d_model,
 # MSE loss
 function loss(x,y)
   Flux.reset!(model)
-  return Flux.mse(model(x),y)
+  return sum(abs2,model(x) - y')
 end
 
 # Callback for plotting the training
@@ -49,4 +46,4 @@ end
 
 # Training loop
 Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target),50),
-            ADAM(0.01), cb=cb)
+            ADAM(0.005), cb=cb)
