@@ -4,7 +4,7 @@
 
 mutable struct TPALSTMCell{A, B, C, D, E, F, G, X, Y, Z}
     # Prediction layers
-    embedding::A  
+    embedding::A
     output::B
     lstm::C
     # Attention layers
@@ -44,7 +44,7 @@ function TPALSTM(in::Integer, hiddensize::Integer, poollength::Integer, layers=1
 
 	embedding = Dense(in, hiddensize, Flux.relu; initW = initW, initb = initb)
     output = Dense(hiddensize, 1; initW = initW, initb = initb)  # 1 could be replaced by output_horizon
-    lstm = StackedLSTM(hiddensize, hiddensize, hiddensize, layers; init = init)
+    lstm = Seq(StackedLSTM(hiddensize, hiddensize, hiddensize, layers; init = init))
 
     attention_length = poollength - 1
     attention_size = hiddensize
@@ -89,8 +89,7 @@ function _TPALSTM_gethidden(inp, m::TPALSTMCell)
     @inbounds for t in 1:m.poollength-1
         x = inp[:,t,:]
         xconcat = m.embedding(x)
-        _ = m.lstm(xconcat)
-        hiddenstate = m.lstm.chain[end].state[1]
+        hiddenstate = m.lstm(xconcat)
         H[:,t,:] = hiddenstate
     end
     return copy(H)
@@ -103,8 +102,7 @@ function (m::TPALSTMCell)(x)
 	H = Flux.relu.(H_raw)
     x = inp[:,end,:]
     xconcat = m.embedding(x)
-    _ = m.lstm(xconcat)
-    h_last = m.lstm.chain[end].state[1]
+    h_last = m.lstm(xconcat)
     ht = _TPALSTM_attention(H, h_last, m)
     return m.output(ht)
 end
@@ -114,8 +112,11 @@ function Base.show(io::IO, l::TPALSTMCell)
 	print(io, "TPALSTM(", size(l.embedding.W,2))
 	print(io, ", ", l.hiddensize)
 	print(io, ", ", l.poollength)
-	length(l.lstm.chain) == 1 || print(io, ", ", length(l.lstm.chain))
+	length(l.lstm.chain.chain) == 1 || print(io, ", ", length(l.lstm.chain.chain))
 	(l.filternum == 32 && size(l.attention_conv.weight,1) == 1) || print(io, ", ", l.filternum)
 	(l.filternum == 32 && size(l.attention_conv.weight,1) == 1) || print(io, ", ", size(l.attention_conv.weight,1))
 	print(io, ")")
 end
+
+# Initialize forget gate bias with 1
+initialize_bias!(l::TPALSTMCell) = initialize_bias!(l.lstm.chain)

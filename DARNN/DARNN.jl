@@ -59,12 +59,12 @@ function DARNN(inp::Integer, encodersize::Integer, decodersize::Integer, poollen
 	initW = Flux.glorot_uniform, initb = Flux.zeros)
 
 	# Encoder part
-	encoder_lstm = LSTM(inp, encodersize)
+	encoder_lstm = Seq(HiddenRecur(Flux.LSTMCell(inp, encodersize)))
 	encoder_attn = Chain(Dense(2*encodersize + poollength, poollength, initW=initW, initb=initb),
 	                    a -> tanh.(a),
 	                    Dense(poollength,1,initW=initW, initb=initb))
 	# Decoder part
-	decoder_lstm = LSTM(1, decodersize)
+	decoder_lstm = Seq(HiddenRecur(Flux.LSTMCell(1, decodersize)))
 	decoder_attn = Chain(Dense(2*decodersize + encodersize, encodersize, initW=initW, initb=initb),
 	                    a -> tanh.(a),
 	                    Dense(encodersize, 1, initW=initW, initb=initb))
@@ -125,9 +125,9 @@ end
 
 # pretty printing
 function Base.show(io::IO, l::DARNNCell)
-	print(io, "DARNN(", size(l.encoder_lstm.cell.Wi,2))
+	print(io, "DARNN(", size(l.encoder_lstm.chain.cell.Wi,2))
 	print(io, ", ", l.encodersize)
-	print(io, ", ", Int(size(l.decoder_lstm.cell.Wi,1)/4))
+	print(io, ", ", Int(size(l.decoder_lstm.chain.cell.Wi,1)/4))
 	print(io, ", ", l.poollength)
 	print(io, ", ", l.orig_idx)
 	print(io, ")")

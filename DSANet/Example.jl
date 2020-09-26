@@ -6,6 +6,7 @@ using Pkg; Pkg.activate(".")
 Pkg.instantiate()
 
 using Flux, Plots, BSON
+using Random
 include("DSAnet.jl")
 include("../data/dataloader.jl")
 
@@ -25,6 +26,7 @@ n_layers = 3
 n_head = 2
 
 # Define the neural net
+Random.seed!(123)
 model = DSANet(inputsize, poollength, local_length, n_kernels, d_model,
                hiddensize, n_layers, n_head)
 

@@ -118,13 +118,12 @@ layers; and `initW` and `initb` for the initialization of the dense layer.
 function LSTnet(in::Integer, convlayersize::Integer, recurlayersize::Integer, poolsize::Integer, skiplength::Integer, σ = Flux.relu;
 	init = Flux.glorot_uniform, initW = Flux.glorot_uniform, initb = Flux.zeros)
 
-	CL = Chain(Conv((in, poolsize), 1 => convlayersize, σ))
-	RL = Chain(a -> dropdims(a, dims = (findall(size(a) .== 1)...,)),
-			ReluGRU(convlayersize,recurlayersize; init = init))
-	RSL = Chain(a -> dropdims(a, dims = (findall(size(a) .== 1)...,)),
-			SkipGRU(convlayersize,recurlayersize, skiplength; init = init))
+	CL = Chain(Conv((in, poolsize), 1 => convlayersize, σ),
+			a -> dropdims(a, dims = (1,2)))
+	RL = Seq(ReluGRU(convlayersize,recurlayersize; init = init))
+	RSL = Seq(SkipGRU(convlayersize,recurlayersize, skiplength; init = init))
 	RD = Chain(Dense(2*recurlayersize, 1, identity))
-	AL = Chain(a -> a[:,1,1,:], Dense(in, 1 , identity; initW = initW, initb = initb) )
+	AL = Chain(a -> a[:,end,1,:], Dense(in, 1 , identity; initW = initW, initb = initb) )
 
     LSTnetCell(CL, RL, RSL, RD, AL)
 end
@@ -138,9 +137,9 @@ end
 
 function Base.show(io::IO, l::LSTnetCell)
   print(io, "LSTnet(", size(l.ConvLayer[1].weight,1))
-  print(io, ", ", size(l.RecurLayer[2].cell.Wi, 2), ", ", size(l.RecurLayer[2].cell.Wi, 1)÷3 )
+  print(io, ", ", size(l.RecurLayer.chain.cell.Wi, 2), ", ", size(l.RecurLayer.chain.cell.Wi, 1)÷3 )
   print(io, ", ", size(l.ConvLayer[1].weight,2))
-  print(io, ", ", l.RecurSkipLayer[2].cell.p)
+  print(io, ", ", l.RecurSkipLayer.chain.cell.p)
   l.ConvLayer[1].σ == Flux.relu || print(io, ", ", l.ConvLayer[1].σ)
   print(io, ")")
 end

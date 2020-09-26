@@ -5,15 +5,15 @@ cd(@__DIR__)
 using Pkg; Pkg.activate("."); Pkg.instantiate()
 
 using Flux, Plots, BSON
-using Statistics
+include("../shared/Sequentialize.jl")
+include("../data/dataloader.jl")
 include("StackedLSTM.jl")
 include("TPALSTM.jl")
-include("../data/dataloader.jl")
 
 # Load some sample data
 poollength = 10
 horizon = 6
-datalength = 5000
+datalength = 1000
 input, target = get_data(:solar, poollength, datalength, horizon)
 
 # Define the network architecture
