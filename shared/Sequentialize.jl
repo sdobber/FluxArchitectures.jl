@@ -50,12 +50,35 @@ end
 Seq(chain) = Seq(chain, [0.0f0])
 
 # e.g. Seq(HiddenRecur(LSTMCell(10, 12))) returns hidden and cell state
+# This variant is elegant but slow
+# function (l::Seq)(x)
+#     out = l.chain.(Flux.unstack(x,2))
+#     if typeof(l.chain.state) <: Array || typeof(l.chain) <: Flux.Recur
+#         l.state = Flux.stack(out,2)
+#     elseif typeof(l.chain.state) <: Tuple
+#         l.state = [Flux.stack(Flux.stack(out,1)[:,i],2) for i in 1:length(l.chain.state)]
+#     end
+#     return l.state
+# end
+
+# 1/3 of allocations, double as fast
 function (l::Seq)(x)
-    out = l.chain.(Flux.unstack(x,2))
     if typeof(l.chain.state) <: Array || typeof(l.chain) <: Flux.Recur
-        l.state = Flux.stack(out,2)
+        sizeval = (length(l.chain(x[:,1])), size(x,2))
+        out = Flux.Zygote.Buffer(x, sizeval)
+        for i = 1:sizeval[2]
+          out[:,i] = l.chain(x[:,i])
+        end
+        l.state = copy(out)
     elseif typeof(l.chain.state) <: Tuple
-        l.state = [Flux.stack(Flux.stack(out,1)[:,i],2) for i in 1:length(l.chain.state)]
+        sizeval = (length(l.chain(x[:,1])[1]), size(x,2))
+        numhidden = length(l.chain.state)
+        out = Flux.Zygote.Buffer(x, numhidden*sizeval[1], sizeval[2])
+        for i=1:sizeval[2]
+          out[:,i] = vcat(l.chain(x[:,i])...)
+        end
+        output = copy(out)
+        l.state = [output[i*sizeval[1]+1:(i+1)*sizeval[1],:] for i=0:numhidden-1]
     end
     return l.state
 end
