@@ -30,7 +30,7 @@ function StackedLSTM(in::Integer, out::Integer, hiddensize::Integer, layers::Int
 		end
 		chain = Chain(chain_vec..., LSTM(hiddensize, out; init = init))
 	end
-	return StackedLSTMCell(chain, [0.0f0])
+	return StackedLSTMCell(chain,  zeros(Float32,out))
 end
 
 function (m::StackedLSTMCell)(x)

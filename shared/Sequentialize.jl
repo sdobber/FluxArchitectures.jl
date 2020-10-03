@@ -63,15 +63,22 @@ Seq(chain) = Seq(chain, [0.0f0])
 
 # 1/3 of allocations, double as fast
 function (l::Seq)(x)
-    if typeof(l.chain.state) <: Array || typeof(l.chain) <: Flux.Recur
-        sizeval = (length(l.chain(x[:,1])), size(x,2))
+    if typeof(l.chain.state) <: Array
+        sizeval = (length(l.chain.state), size(x,2))
+        out = Flux.Zygote.Buffer(x, sizeval)
+        for i = 1:sizeval[2]
+          out[:,i] = l.chain(x[:,i])
+        end
+        l.state = copy(out)
+	elseif typeof(l.chain.state) <: Tuple && typeof(l.chain) <: Flux.Recur
+        sizeval = (length(l.chain.state[1]), size(x,2))
         out = Flux.Zygote.Buffer(x, sizeval)
         for i = 1:sizeval[2]
           out[:,i] = l.chain(x[:,i])
         end
         l.state = copy(out)
     elseif typeof(l.chain.state) <: Tuple
-        sizeval = (length(l.chain(x[:,1])[1]), size(x,2))
+        sizeval = (length(l.chain.init[1]), size(x,2))
         numhidden = length(l.chain.state)
         out = Flux.Zygote.Buffer(x, numhidden*sizeval[1], sizeval[2])
         for i=1:sizeval[2]
