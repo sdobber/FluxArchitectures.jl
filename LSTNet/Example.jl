@@ -5,8 +5,8 @@ cd(@__DIR__)
 using Pkg; Pkg.activate("."); Pkg.instantiate()
 
 using Flux, Plots, BSON
-include("../data/dataloader.jl")
 include("../shared/Sequentialize.jl")
+include("../data/dataloader.jl")
 include("LSTnet.jl")
 
 # Load some sample data

@@ -7,7 +7,6 @@ using Pkg; Pkg.activate("."); Pkg.instantiate()
 using Flux, Plots, BSON
 include("../shared/Sequentialize.jl")
 include("../data/dataloader.jl")
-include("StackedLSTM.jl")
 include("TPALSTM.jl")
 
 # Load some sample data
