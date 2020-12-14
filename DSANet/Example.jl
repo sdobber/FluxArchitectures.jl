@@ -7,7 +7,7 @@ Pkg.instantiate()
 
 using Flux, Plots, BSON
 using Random
-include("DSAnet.jl")
+include("DSANet.jl")
 include("../data/dataloader.jl")
 
 # Load some sample data
