@@ -13,8 +13,8 @@ include("../data/dataloader.jl")
 # Load some sample data
 poollength = 10
 horizon = 6
-datalength = 5000
-input, target = get_data(:exchange_rate, poollength, datalength, horizon)
+datalength = 2000
+input, target = get_data(:exchange_rate, poollength, datalength, horizon) |> gpu
 
 # Define the network architecture
 inputsize = size(input,1)
@@ -28,21 +28,21 @@ n_head = 2
 # Define the neural net
 Random.seed!(123)
 model = DSANet(inputsize, poollength, local_length, n_kernels, d_model,
-               hiddensize, n_layers, n_head)
+               hiddensize, n_layers, n_head) |> gpu
 
 # MSE loss
 function loss(x,y)
   Flux.reset!(model)
-  return sum(abs2,model(x) - y')
+  return Flux.mse(model(x),y')
 end
 
 # Callback for plotting the training
 cb = function()
   Flux.reset!(model)
-  pred = model(input)'
+  pred = model(input)' |> cpu
   Flux.reset!(model)
   p1=plot(pred, label="Predict")
-  p1=plot!(target, label="Data")
+  p1=plot!(cpu(target), label="Data")
   display(plot(p1))
 end
 
