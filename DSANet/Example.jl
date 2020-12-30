@@ -13,7 +13,7 @@ include("../data/dataloader.jl")
 # Load some sample data
 poollength = 10
 horizon = 6
-datalength = 2000
+datalength = 4000
 input, target = get_data(:exchange_rate, poollength, datalength, horizon) |> gpu
 
 # Define the network architecture
@@ -42,7 +42,7 @@ cb = function()
   pred = model(input)' |> cpu
   Flux.reset!(model)
   p1=plot(pred, label="Predict")
-  p1=plot!(cpu(target), label="Data")
+  p1=plot!(cpu(target), label="Data", title="Loss $(loss(input,target))")
   display(plot(p1))
 end
 
