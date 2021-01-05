@@ -29,7 +29,7 @@ function (m::HiddenRecur)(xs...)
   return collect(h)
 end
 
-Flux.@functor HiddenRecur cell, init
+Flux.@functor HiddenRecur
 
 Base.show(io::IO, m::HiddenRecur) = print(io, "HiddenRecur(", m.cell, ")")
 Flux.reset!(m::HiddenRecur) = (m.state = m.init)
@@ -69,6 +69,10 @@ getbuffersize(::Type{<:Union{Flux.Recur, StackedLSTMCell}},
 getbuffersize(::Type{<:Union{HiddenRecur}},
 				state::Tuple, x) = ((length(state[1]), size(x,2)), length(state))
 
+# CUDA Addons
+getbuffersize(::Type{<:Union{Flux.Recur, StackedLSTMCell}},
+ 				state::Flux.CUDA.CuArray, x) = ((length(state), size(x,2)), 1)
+
 function writebuffer(chain::HiddenRecur,x)
 	sizeval, numhidden = getbuffersize(chain,x)
 	out = Flux.Zygote.Buffer(x, numhidden*sizeval[1], sizeval[2])
@@ -103,6 +107,8 @@ function Flux.reset!(m::Seq)
   m.state = [0.0f0]
   return nothing
 end
+
+Flux.@functor Seq
 Flux.trainable(m::Seq) = Flux.trainable(m.chain)
 
 
@@ -168,7 +174,7 @@ end
 
 (l::SeqSkip)(x) = writebuffer(l,x)
 
-Flux.@functor SeqSkip cell, init
+Flux.@functor SeqSkip
 
 Base.show(io::IO, m::SeqSkip) = print(io, "SeqSkip(", m.cell, ")")
 Flux.reset!(m::SeqSkip) = (m.state = m.init)

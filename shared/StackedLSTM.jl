@@ -39,6 +39,7 @@ function (m::StackedLSTMCell)(x)
 	return out
 end
 
+Flux.@functor StackedLSTMCell 
 Flux.trainable(m::StackedLSTMCell) = (m.chain)
 
 function Base.show(io::IO, l::StackedLSTMCell)
