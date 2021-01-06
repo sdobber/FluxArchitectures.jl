@@ -80,22 +80,29 @@ end
 
 # Get the pooled hidden state from feeding it to the LSTM cell
 # TO DO: Get rid of Zygote.Buffer for speeding things up
+# function _TPALSTM_gethidden(inp, m::TPALSTMCell)
+#     batchsize = size(inp,3)
+#     H = Flux.Zygote.Buffer([0.0f0], m.hiddensize, m.poollength-1, batchsize)  # needs to be off GPU
+#     @inbounds for t in 1:m.poollength-1
+#         x = inp[:,t,:]
+#         xconcat = m.embedding(x)
+#         hiddenstate = m.lstm(xconcat)
+#         H[:,t,:] .= hiddenstate 
+#     end
+#     return copy(H)  # returns CPU array - transfer to GPU again
+# end
 function _TPALSTM_gethidden(inp, m::TPALSTMCell)
-    batchsize = size(inp,3)
-    H = Flux.Zygote.Buffer([0.0f0], m.hiddensize, m.poollength-1, batchsize)  # needs to be off GPU
-    @inbounds for t in 1:m.poollength-1
-        x = inp[:,t,:]
-        xconcat = m.embedding(x)
-        hiddenstate = m.lstm(xconcat)
-        H[:,t,:] .= hiddenstate 
-    end
-    return copy(H)  # returns CPU array - transfer to GPU again
+        x = Flux.unstack(inp, 2)[1:end-1]
+        xconcat = m.embedding.(x)
+        hiddenstate = m.lstm.(xconcat)
+        H = Flux.stack(hiddenstate,2)
+    return H 
 end
 
 # Model output
 function (m::TPALSTMCell)(x)
     inp = dropdims(x, dims=3)
-    H_raw = _TPALSTM_gethidden(inp, m) |> gpu
+    H_raw = _TPALSTM_gethidden(inp, m)
 	H = Flux.relu.(H_raw)
     x = inp[:,end,:]
     xconcat = m.embedding(x)
