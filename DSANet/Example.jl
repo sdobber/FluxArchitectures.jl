@@ -5,12 +5,14 @@ cd(@__DIR__)
 using Pkg; Pkg.activate(".")
 Pkg.instantiate()
 
-using Flux, Plots, BSON
+@info "Loading packages"
+using Flux, BSON, Plots
 using Random
 include("DSANet.jl")
 include("../data/dataloader.jl")
 
 # Load some sample data
+@info "Loading data"
 poollength = 10
 horizon = 6
 datalength = 4000
@@ -26,6 +28,7 @@ n_layers = 3
 n_head = 2
 
 # Define the neural net
+@info "Creating model and loss"
 Random.seed!(123)
 model = DSANet(inputsize, poollength, local_length, n_kernels, d_model,
                hiddensize, n_layers, n_head) |> gpu
@@ -47,5 +50,9 @@ cb = function()
 end
 
 # Training loop
-Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target),50),
-            ADAM(0.005), cb=cb)
+@info "Starting training"
+Flux.@epochs 5 Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target),5),
+             ADAM(0.005), cb=cb)
+
+@info "Finished"
+@info "Final loss" loss=loss(input,target)
