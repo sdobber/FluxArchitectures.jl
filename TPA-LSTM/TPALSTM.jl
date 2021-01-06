@@ -64,7 +64,7 @@ end
 Flux.trainable(m::TPALSTMCell) = (m.embedding, m.output, m.lstm, m.attention_linear1,
  				m.attention_linear2, m.attention_conv)
 Flux.reset!(m::TPALSTMCell) = Flux.reset!(m.lstm.chain)
-Flux.@functor TPALSTMCell # embedding, output, lstm, attention_linear1, attention_linear2, attention_conv, 
+Flux.@functor TPALSTMCell # embedding, output, lstm, attention_linear1, attention_linear2, attention_conv,
 
 # Attention part of the network
 function _TPALSTM_attention(H, h_last, m::TPALSTMCell)
@@ -80,23 +80,24 @@ end
 
 # Get the pooled hidden state from feeding it to the LSTM cell
 # TO DO: Get rid of Zygote.Buffer for speeding things up
-# function _TPALSTM_gethidden(inp, m::TPALSTMCell)
-#     batchsize = size(inp,3)
-#     H = Flux.Zygote.Buffer([0.0f0], m.hiddensize, m.poollength-1, batchsize)  # needs to be off GPU
-#     @inbounds for t in 1:m.poollength-1
-#         x = inp[:,t,:]
-#         xconcat = m.embedding(x)
-#         hiddenstate = m.lstm(xconcat)
-#         H[:,t,:] .= hiddenstate 
-#     end
-#     return copy(H)  # returns CPU array - transfer to GPU again
-# end
 function _TPALSTM_gethidden(inp, m::TPALSTMCell)
+    batchsize = size(inp,3)
+    H = Flux.Zygote.Buffer([0.0f0], m.hiddensize, m.poollength-1, batchsize)  # needs to be off GPU
+    @inbounds for t in 1:m.poollength-1
+        x = inp[:,t,:]
+        xconcat = m.embedding(x)
+        hiddenstate = m.lstm(xconcat)
+        H[:,t,:] = hiddenstate
+    end
+    return copy(H)
+end
+# Slow, but above code does not work on GPU due to array mutations
+function _TPALSTM_gethidden(inp::Flux.CUDA.CuArray, m::TPALSTMCell)
         x = Flux.unstack(inp, 2)[1:end-1]
         xconcat = m.embedding.(x)
         hiddenstate = m.lstm.(xconcat)
         H = Flux.stack(hiddenstate,2)
-    return H 
+    return H
 end
 
 # Model output

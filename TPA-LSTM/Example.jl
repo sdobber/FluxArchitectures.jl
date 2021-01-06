@@ -14,7 +14,7 @@ include("TPALSTM.jl")
 @info "Loading data"
 poollength = 10
 horizon = 6
-datalength = 1000
+datalength = 2000
 input, target = get_data(:solar, poollength, datalength, horizon) |> gpu
 
 # Define the network architecture
@@ -40,15 +40,15 @@ cb = function()
   pred = model(input)' |> gpu
   Flux.reset!(model)
   p1=plot(pred, label="Predict")
-  p1=plot!(target, label="Data", title="Loss $(loss(input, target))")
+  p1=plot!(cpu(target), label="Data", title="Loss $(loss(input, target))")
   display(plot(p1))
 end
 
 # Training loop
 @info "Start loss" loss=loss(input,target)
 @info "Starting training"
-Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target),1),
-            ADAM(0.01))  # , cb=cb
+Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target),50),
+            ADAM(0.02), cb=cb)
 
 @info "Finished"
 @info "Final loss" loss=loss(input,target)
