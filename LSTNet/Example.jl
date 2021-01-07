@@ -5,7 +5,7 @@ cd(@__DIR__)
 using Pkg; Pkg.activate("."); Pkg.instantiate()
 
 @info "Loading packages"
-using Flux, BSON # Plots,
+using Flux, BSON, Plots
 include("../shared/Sequentialize.jl")
 include("../data/dataloader.jl")
 include("LSTnet.jl")
@@ -48,7 +48,7 @@ end
 @info "Start loss" loss=loss(input,target)
 @info "Starting training"
 Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target),20),
-            ADAM(0.01))  # , cb=cb
+            ADAM(0.01), cb=cb) 
 
 @info "Finished"
 @info "Final loss" loss=loss(input,target)            

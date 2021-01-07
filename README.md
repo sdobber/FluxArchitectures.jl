@@ -30,3 +30,8 @@ Currently, the following example data from https://github.com/laiguokun/multivar
 * `:electricity`: The raw dataset is from https://archive.ics.uci.edu/ml/datasets/ElectricityLoadDiagrams20112014. It is the electricity consumption in kWh was recorded every 15 minutes from 2011 to 2014 for 321 clients. The data has been cleaned and converted to hourly consumption.
 
 * `:exchange_rate`: The collection of daily exchange rates of eight foreign countries including Australia, Great Britain, Canada, Switzerland, China, Japan, New Zealand and Singapore ranging from 1990 to 2016.
+
+
+## A Note on GPU Calculations
+
+After finally getting access to a Nvidia developer board, I try to extend the models to allow for calculations to be carried out on the GPU using `CUDA.jl`. With the complete lack of prior experience in GPU programming, I cannot guarantee that calculations on the GPU are performed in a resonable or even optimal way. For example in the case of `TPA-LSTM`, training on the GPU turns out to be slower than on the CPU on my hardware. Hints for improvements will be gladly accepted.
