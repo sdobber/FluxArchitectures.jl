@@ -108,6 +108,7 @@ function Base.show(io::IO, l::LSTnetCell)
   print(io, ")")
 end
 
+Flux.@functor LSTnetCell
 Flux.params(m::LSTnetCell) = Flux.params(m.ConvLayer, m.RecurLayer, m.RecurSkipLayer, m.RecurDense, m.AutoregLayer)
 Flux.reset!(m::LSTnetCell) = Flux.reset!.((m.ConvLayer, m.RecurLayer, m.RecurSkipLayer, m.RecurDense, m.AutoregLayer))
 
