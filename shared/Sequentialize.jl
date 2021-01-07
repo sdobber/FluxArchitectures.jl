@@ -63,15 +63,11 @@ Seq(chain) = Seq(chain, [0.0f0])
 
 getbuffersize(chain, x) = getbuffersize(typeof(chain), chain.state, x)
 getbuffersize(::Type{<:Union{Flux.Recur, StackedLSTMCell}},
- 				state::Array, x) = ((length(state), size(x,2)), 1)
+ 				state::AbstractArray, x) = ((length(state), size(x,2)), 1)
 getbuffersize(::Type{<:Union{Flux.Recur, StackedLSTMCell}},
 				state::Tuple, x) = ((length(state[1]), size(x,2)), 1)
 getbuffersize(::Type{<:Union{HiddenRecur}},
 				state::Tuple, x) = ((length(state[1]), size(x,2)), length(state))
-
-# CUDA Addons
-getbuffersize(::Type{<:Union{Flux.Recur, StackedLSTMCell}},
- 				state::Flux.CUDA.CuArray, x) = ((length(state), size(x,2)), 1)
 
 function writebuffer(chain::HiddenRecur,x)
 	sizeval, numhidden = getbuffersize(chain,x)
@@ -135,12 +131,12 @@ end
 
 SeqSkip(m, p, h=Flux.hidden(m)) = SeqSkip(m, p, h, h, h)
 
-getbuffersize(::Type{<:SeqSkip}, state::Array, x) = ((length(state), size(x,2)), 1)
+getbuffersize(::Type{<:SeqSkip}, state::AbstractArray, x) = ((length(state), size(x,2)), 1)
 getbuffersize(::Type{<:SeqSkip}, state::Tuple, x) = ((length(state[1]), size(x,2)), length(state))
 
 writebuffer(l::SeqSkip,x) = writebuffer(typeof(l.state), l, x)
 
-function writebuffer(::Type{<:Array}, l::SeqSkip, x)
+function writebuffer(::Type{<:Union{AbstractArray}}, l::SeqSkip, x)
 	sizeval, numhidden = getbuffersize(l,x)
 	out = Flux.Zygote.Buffer(x, sizeval)
 	h, y = l.cell(l.state, x[:,1])
