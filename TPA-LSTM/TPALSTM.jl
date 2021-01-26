@@ -82,7 +82,7 @@ end
 # TO DO: Get rid of Zygote.Buffer for speeding things up
 function _TPALSTM_gethidden(inp, m::TPALSTMCell)
     batchsize = size(inp,3)
-    H = Flux.Zygote.Buffer([0.0f0], m.hiddensize, m.poollength-1, batchsize)  # needs to be off GPU
+    H = Flux.Zygote.Buffer(inp, m.hiddensize, m.poollength-1, batchsize)  # needs to be off GPU
     @inbounds for t in 1:m.poollength-1
         x = inp[:,t,:]
         xconcat = m.embedding(x)
@@ -90,14 +90,6 @@ function _TPALSTM_gethidden(inp, m::TPALSTMCell)
         H[:,t,:] = hiddenstate
     end
     return copy(H)
-end
-# Slow, but above code does not work on GPU due to array mutations
-function _TPALSTM_gethidden(inp::Flux.CUDA.CuArray, m::TPALSTMCell)
-        x = Flux.unstack(inp, 2)[1:end-1]
-        xconcat = m.embedding.(x)
-        hiddenstate = m.lstm.(xconcat)
-        H = Flux.stack(hiddenstate,2)
-    return H
 end
 
 # Model output

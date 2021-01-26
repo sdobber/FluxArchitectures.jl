@@ -73,7 +73,7 @@ function writebuffer(chain::HiddenRecur,x)
 	sizeval, numhidden = getbuffersize(chain,x)
 	out = Flux.Zygote.Buffer(x, numhidden*sizeval[1], sizeval[2])
 	for i=1:sizeval[2]
-	  out[:,i] = vcat(chain(x[:,i])...)
+	  out[:,i] = cat(chain(x[:,i])...; dims=1)
 	end
 	output = copy(out)
 	return [output[i*sizeval[1]+1:(i+1)*sizeval[1],:] for i=0:numhidden-1]
