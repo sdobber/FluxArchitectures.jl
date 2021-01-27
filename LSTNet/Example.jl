@@ -37,7 +37,7 @@ end
 # Callback for plotting the training
 cb = function()
   Flux.reset!(model)
-  pred = model(input)' |> gpu
+  pred = model(input)' |> cpu
   Flux.reset!(model)
   p1=plot(pred, label="Predict")
   p1=plot!(cpu(target), label="Data", title="Loss $(loss(input, target))")
@@ -48,7 +48,7 @@ end
 @info "Start loss" loss=loss(input,target)
 @info "Starting training"
 Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target),20),
-            ADAM(0.01), cb=cb) 
+            ADAM(0.01), cb=cb)
 
 @info "Finished"
-@info "Final loss" loss=loss(input,target)            
+@info "Final loss" loss=loss(input,target)
