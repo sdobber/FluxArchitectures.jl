@@ -28,7 +28,7 @@ model = DARNN(inputsize, encodersize, decodersize, poollength, 1) |> gpu
 
 # MSE loss
 function loss(x, y)
-  # Flux.reset!(model)
+    Flux.reset!(model)
     return Flux.mse(model(x), y')
 end
 
@@ -46,7 +46,7 @@ end
 @info "Start loss" loss = loss(input, target)
 @info "Starting training"
 Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20),
-            ADAM(0.007), cb=cb) 
+            ADAM(0.007), cb=cb)
 
 @info "Finished"
-@info "Final loss" loss = loss(input, target)  
+@info "Final loss" loss = loss(input, target)
