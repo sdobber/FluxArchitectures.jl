@@ -26,13 +26,14 @@ HiddenRecur(m, h = Flux.hidden(m)) = HiddenRecur(m, h, h)
 function (m::HiddenRecur)(xs...)
   h, y = m.cell(m.state, xs...)
   m.state = h
-  return collect(h)
+  return h  # collect(h)
 end
 
-Flux.@functor HiddenRecur
+Flux.@functor HiddenRecur cell, init
 
 Base.show(io::IO, m::HiddenRecur) = print(io, "HiddenRecur(", m.cell, ")")
 Flux.reset!(m::HiddenRecur) = (m.state = m.init)
+Flux.trainable(m::HiddenRecur) = (m.cell,)
 
 
 """
