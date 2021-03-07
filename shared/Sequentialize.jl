@@ -16,17 +16,17 @@ cell state.
 See also: [`Recur`](@ref)
 """
 mutable struct HiddenRecur{T}
-  cell::T
-  init
-  state
+    cell::T
+    init
+    state
 end
 
-HiddenRecur(m, h = Flux.hidden(m)) = HiddenRecur(m, h, h)
+HiddenRecur(m, h=Flux.hidden(m)) = HiddenRecur(m, h, h)
 
 function (m::HiddenRecur)(xs...)
-  h, y = m.cell(m.state, xs...)
-  m.state = h
-  return h  # collect(h)
+    h, y = m.cell(m.state, xs...)
+    m.state = h
+    return h  # collect(h)
 end
 
 Flux.@functor HiddenRecur cell, init
@@ -52,36 +52,35 @@ Seq(chain) = Seq(chain, [0.0f0])
 
 # e.g. Seq(HiddenRecur(LSTMCell(10, 12))) returns hidden and cell state
 # This variant is elegant but slow
-# function (l::Seq)(x)
-#     out = l.chain.(Flux.unstack(x,2))
-#     if typeof(l.chain.state) <: Array || typeof(l.chain) <: Flux.Recur
-#         l.state = Flux.stack(out,2)
-#     elseif typeof(l.chain.state) <: Tuple
-#         l.state = [Flux.stack(Flux.stack(out,1)[:,i],2) for i in 1:length(l.chain.state)]
-#     end
-#     return l.state
-# end
+function (l::Seq)(x)
+    if typeof(l.chain.state) <: Array || typeof(l.chain) <: Flux.Recur
+        l.state = Align(map(l.chain, Slices(x, True(), False())), 1)
+    elseif typeof(l.chain.state) <: Tuple
+        l.state = [Flux.stack(Flux.stack(out, 1)[:,i], 2) for i in 1:length(l.chain.state)]
+    end
+    return l.state
+end
 
 getbuffersize(chain, x) = getbuffersize(typeof(chain), chain.state, x)
-getbuffersize(::Type{<:Union{Flux.Recur, StackedLSTMCell}},
- 				state::AbstractArray, x) = ((length(state), size(x,2)), 1)
-getbuffersize(::Type{<:Union{Flux.Recur, StackedLSTMCell}},
-				state::Tuple, x) = ((length(state[1]), size(x,2)), 1)
+getbuffersize(::Type{<:Union{Flux.Recur,StackedLSTMCell}},
+ 				state::AbstractArray, x) = ((length(state), size(x, 2)), 1)
+getbuffersize(::Type{<:Union{Flux.Recur,StackedLSTMCell}},
+				state::Tuple, x) = ((length(state[1]), size(x, 2)), 1)
 getbuffersize(::Type{<:Union{HiddenRecur}},
-				state::Tuple, x) = ((length(state[1]), size(x,2)), length(state))
+				state::Tuple, x) = ((length(state[1]), size(x, 2)), length(state))
 
-function writebuffer(chain::HiddenRecur,x)
-	sizeval, numhidden = getbuffersize(chain,x)
-	out = Flux.Zygote.Buffer(x, numhidden*sizeval[1], sizeval[2])
-	for i=1:sizeval[2]
+function writebuffer(chain::HiddenRecur, x)
+	sizeval, numhidden = getbuffersize(chain, x)
+	out = Flux.Zygote.Buffer(x, numhidden * sizeval[1], sizeval[2])
+	for i = 1:sizeval[2]
 	  out[:,i] = cat(chain(x[:,i])...; dims=1)
 	end
 	output = copy(out)
-	return [output[i*sizeval[1]+1:(i+1)*sizeval[1],:] for i=0:numhidden-1]
+	return [output[i * sizeval[1] + 1:(i + 1) * sizeval[1],:] for i = 0:numhidden - 1]
 end
 
-function writebuffer(chain,x)
-	sizeval, numhidden = getbuffersize(chain,x)
+function writebuffer(chain, x)
+	sizeval, numhidden = getbuffersize(chain, x)
 	out = Flux.Zygote.Buffer(x, sizeval)
 	for i = 1:sizeval[2]
 	  out[:,i] = chain(x[:,i])
@@ -89,20 +88,20 @@ function writebuffer(chain,x)
 	return copy(out)
 end
 
-function (l::Seq)(x)
-	l.state = writebuffer(l.chain, x)
-	return l.state
-end
+# function (l::Seq)(x)
+# 	l.state = writebuffer(l.chain, x)
+# 	return l.state
+# end
 
 function Base.show(io::IO, l::Seq)
-  print(io, "Seq(", l.chain)
-  print(io, ")")
+    print(io, "Seq(", l.chain)
+    print(io, ")")
 end
 
 function Flux.reset!(m::Seq)
-  Flux.reset!(m.chain)
-  m.state = [0.0f0]
-  return nothing
+    Flux.reset!(m.chain)
+    m.state = [0.0f0]
+    return nothing
 end
 
 Flux.@functor Seq
@@ -132,19 +131,19 @@ end
 
 SeqSkip(m, p, h=Flux.hidden(m)) = SeqSkip(m, p, h, h, h)
 
-getbuffersize(::Type{<:SeqSkip}, state::AbstractArray, x) = ((length(state), size(x,2)), 1)
-getbuffersize(::Type{<:SeqSkip}, state::Tuple, x) = ((length(state[1]), size(x,2)), length(state))
+getbuffersize(::Type{<:SeqSkip}, state::AbstractArray, x) = ((length(state), size(x, 2)), 1)
+getbuffersize(::Type{<:SeqSkip}, state::Tuple, x) = ((length(state[1]), size(x, 2)), length(state))
 
 writebuffer(l::SeqSkip,x) = writebuffer(typeof(l.state), l, x)
 
 function writebuffer(::Type{<:Union{AbstractArray}}, l::SeqSkip, x)
-	sizeval, numhidden = getbuffersize(l,x)
+	sizeval, numhidden = getbuffersize(l, x)
 	out = Flux.Zygote.Buffer(x, sizeval)
 	h, y = l.cell(l.state, x[:,1])
 	out[:,1] = h
 	l.state = h
 	for i = 2:sizeval[2]
-	  h, y = l.cell(out[:,max(1,i-l.p)], x[:,i])
+	  h, y = l.cell(out[:,max(1, i - l.p)], x[:,i])
 	  l.state = h
 	  out[:,i] = h
 	end
@@ -153,13 +152,13 @@ function writebuffer(::Type{<:Union{AbstractArray}}, l::SeqSkip, x)
 end
 
 function writebuffer(::Type{<:Tuple}, l::SeqSkip, x)
-	sizeval, numhidden = getbuffersize(l,x)
-	out = Flux.Zygote.Buffer(x, numhidden*sizeval[1], sizeval[2])
+	sizeval, numhidden = getbuffersize(l, x)
+	out = Flux.Zygote.Buffer(x, numhidden * sizeval[1], sizeval[2])
 	h, y = l.cell(l.state, x[:,1])
 	out[:,1] = vcat(h...)
 	l.state = h
-	for i=2:sizeval[2]
-		hidden = Tuple([out[j*sizeval[1]+1:(j+1)*sizeval[1],max(1,i-l.p)] for j=0:numhidden-1 ])
+	for i = 2:sizeval[2]
+		hidden = Tuple([out[j * sizeval[1] + 1:(j + 1) * sizeval[1],max(1, i - l.p)] for j = 0:numhidden - 1 ])
 		h, y = l.cell(hidden, x[:,i])
 		l.state = h
 		out[:,i] = vcat(h...)
@@ -169,7 +168,7 @@ function writebuffer(::Type{<:Tuple}, l::SeqSkip, x)
 end
 # TO DO: For HiddenRecur-type we need writebuffer that outputs `output`
 
-(l::SeqSkip)(x) = writebuffer(l,x)
+(l::SeqSkip)(x) = writebuffer(l, x)
 
 Flux.@functor SeqSkip
 
