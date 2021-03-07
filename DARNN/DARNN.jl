@@ -14,7 +14,7 @@ mutable struct FALSTMCell{A,V}
 end
   
 function FALSTMCell(in::Integer, out::Integer;
-				init = Flux.glorot_uniform)
+				init=Flux.glorot_uniform)
 	cell = FALSTMCell(init(out * 4, in), init(out * 4, out), init(out * 4),
 					Flux.zeros(out), Flux.zeros(out))
 	cell.b[Flux.gate(out, 2)] .= 1
@@ -23,7 +23,7 @@ end
 
 function (m::FALSTMCell)((h, c), x)
 	b, o = m.b, size(h, 1)
-	g = m.Wi*x .+ m.Wh*h .+ b
+	g = m.Wi * x .+ m.Wh * h .+ b
 	input = σ.(Flux.gate(g, o, 1))
 	forget = σ.(Flux.gate(g, o, 2))
 	cell = tanh.(Flux.gate(g, o, 3))
@@ -38,12 +38,12 @@ Flux.hidden(m::FALSTMCell) = (m.h, m.c)
 Flux.@functor FALSTMCell
 
 Base.show(io::IO, l::FALSTMCell) =
-print(io, "FALSTMCell(", size(l.Wi, 2), ", ", size(l.Wi, 1)÷4, ")")
+print(io, "FALSTMCell(", size(l.Wi, 2), ", ", size(l.Wi, 1) ÷ 4, ")")
 
 FALSTM(a...; ka...) = Recur(FALSTMCell(a...; ka...))
 
 # struct that stores layers and some extra information
-mutable struct DARNNCell{A, B, C, D, E, F, W, X, Y, Z}
+mutable struct DARNNCell{A,B,C,D,E,F,W,X,Y,Z}
     # Encoder part
 	encoder_lstm::A
 	encoder_attn::B
@@ -61,10 +61,10 @@ end
 
 # Initialization function to obtain the right size of the hidden state
 # after a `reset!` of the model.
-function darnn_init(m::DARNNCell,x)
+function darnn_init(m::DARNNCell, x)
 	s = size(x)
-	m.encoder_lstm(similar(x,s[1], s[4]))
-	m.decoder_lstm(similar(x,1,s[4]))
+	m.encoder_lstm(zeros(eltype(x), s[1], s[4]))
+	m.decoder_lstm(zeros(eltype(x), 1, s[4]))
 	return nothing
 end
 Flux.Zygote.@nograd darnn_init
@@ -94,16 +94,16 @@ Takes the keyword arguments `initW` and `initb` for the initialization of the
 weight vector and bias of the linear layers.
 """
 function DARNN(inp::Integer, encodersize::Integer, decodersize::Integer, poollength::Integer, orig_idx::Integer;
-	initW = Flux.glorot_uniform, initb = Flux.zeros)
+	initW=Flux.glorot_uniform, initb=Flux.zeros)
 
 	# Encoder part
 	encoder_lstm = Seq(HiddenRecur(FALSTMCell(inp, encodersize)))
-	encoder_attn = Chain(Dense(2*encodersize + poollength, poollength, initW=initW, initb=initb),
+	encoder_attn = Chain(Dense(2 * encodersize + poollength, poollength, initW=initW, initb=initb),
 	                    a -> tanh.(a),
-	                    Dense(poollength,1,initW=initW, initb=initb))
+	                    Dense(poollength, 1, initW=initW, initb=initb))
 	# Decoder part
 	decoder_lstm = Seq(HiddenRecur(FALSTMCell(1, decodersize)))
-	decoder_attn = Chain(Dense(2*decodersize + encodersize, encodersize, initW=initW, initb=initb),
+	decoder_attn = Chain(Dense(2 * decodersize + encodersize, encodersize, initW=initW, initb=initb),
 	                    a -> tanh.(a),
 	                    Dense(encodersize, 1, initW=initW, initb=initb))
 	decoder_fc = Dense(encodersize + 1, 1)
@@ -117,45 +117,45 @@ end
 # model output
 function (m::DARNNCell)(x)
 	# Initialize after reset
-	size(m.encoder_lstm.state,1) == 1 && darnn_init(m,x)
+	size(m.encoder_lstm.state, 1) == 1 && darnn_init(m, x)
 	input_data = dropdims(x; dims=3)
 	input_encoded = darnn_encoder(m, input_data)
 	context = darnn_decoder(m, input_encoded, input_data)
-	return m.decoder_fc_final( cat(m.decoder_lstm.state[1], context, dims=1))
+	return m.decoder_fc_final(cat(m.decoder_lstm.state[1], context, dims=1))
 end
 
 function darnn_encoder(m::DARNNCell, input_data)
 	input_encoded = Flux.Zygote.Buffer(input_data, m.encodersize, m.poollength,
-	 				size(input_data,3))
+	 				size(input_data, 3))
 	@inbounds for t in 1:m.poollength
 	      hidden = m.encoder_lstm.state[1]
 		  cell = m.encoder_lstm.state[2]
 		  repeatmat = darnn_getones(input_data)
 
-	      x = cat(hidden.*repeatmat, cell.*repeatmat,  # CUDA compatible repeat(hidden, inner=(1,1,size(input_data,1)) etc.
-		  		  permutedims(input_data,[2,3,1]), dims=1)  |>
-	           a -> m.encoder_attn(reshape(a, (:, size(input_data,1)*size(input_data,3) ) ))
-	      attn_weights = Flux.softmax( reshape(x, (size(input_data,1), size(input_data,3))  ) )
+	      x = cat(hidden .* repeatmat, cell .* repeatmat,  # CUDA compatible repeat(hidden, inner=(1,1,size(input_data,1)) etc.
+		  		  permutedims(input_data, [2,3,1]), dims=1)  |>
+	           a -> m.encoder_attn(reshape(a, (:, size(input_data, 1) * size(input_data, 3))))
+	      attn_weights = Flux.softmax(reshape(x, (size(input_data, 1), size(input_data, 3))))
 	      weighted_input = attn_weights .* input_data[:,t,:]
 	      _ = m.encoder_lstm(weighted_input)
 
-	      input_encoded[:,t,:] = Flux.unsqueeze(m.encoder_lstm.state[1],2)
+	      input_encoded[:,t,:] = Flux.unsqueeze(m.encoder_lstm.state[1], 2)
 	end
 	return copy(input_encoded)
 end
 
 function darnn_decoder(m::DARNNCell, input_encoded, input_data)
-	context = Flux.zeros(m.encodersize, size(input_data,3))
+	context = Flux.zeros(m.encodersize, size(input_data, 3))
 	@inbounds for t in 1:m.poollength
 	      hidden = m.decoder_lstm.state[1]
 		  cell = m.decoder_lstm.state[2]
-		  repeatmat = darnn_getones(input_data,m.poollength)
-	      x = cat(permutedims(hidden.*repeatmat, [1,3,2]),
-	              permutedims(cell.*repeatmat, [1,3,2]),
+		  repeatmat = darnn_getones(input_data, m.poollength)
+	      x = cat(permutedims(hidden .* repeatmat, [1,3,2]),
+	              permutedims(cell .* repeatmat, [1,3,2]),
 	              input_encoded, dims=1) |>
-	          a -> m.decoder_attn(reshape(a, (2*m.decodersize + m.encodersize,:))) |>
-	          a -> Flux.softmax(reshape(a, (m.poollength,:)))
-	      context = dropdims(NNlib.batched_mul(input_encoded, Flux.unsqueeze(x,2) ), dims=2)
+	          a -> m.decoder_attn(reshape(a, (2 * m.decodersize + m.encodersize, :))) |>
+	          a -> Flux.softmax(reshape(a, (m.poollength, :)))
+	      context = dropdims(NNlib.batched_mul(input_encoded, Flux.unsqueeze(x, 2)), dims=2)
 	      ỹ = m.decoder_fc(cat(context, input_data[m.orig_idx,t,:]', dims=1))
 	      _ = m.decoder_lstm(ỹ)
 	end
@@ -164,16 +164,16 @@ end
 
 # pretty printing
 function Base.show(io::IO, l::DARNNCell)
-	print(io, "DARNN(", size(l.encoder_lstm.chain.cell.Wi,2))
+	print(io, "DARNN(", size(l.encoder_lstm.chain.cell.Wi, 2))
 	print(io, ", ", l.encodersize)
-	print(io, ", ", Int(size(l.decoder_lstm.chain.cell.Wi,1)/4))
+	print(io, ", ", Int(size(l.decoder_lstm.chain.cell.Wi, 1) / 4))
 	print(io, ", ", l.poollength)
 	print(io, ", ", l.orig_idx)
 	print(io, ")")
 end
 
 # Helper functions to replace `repeat` with CUDA friendly version
-darnn_getones(x::Array, size) = ones(1,1,size)
-darnn_getones(x::Flux.CUDA.CuArray, size) = Flux.CUDA.ones(1,1,size)
-darnn_getones(x) = darnn_getones(x, size(x,1))
+darnn_getones(x::Array, size) = ones(1, 1, size)
+darnn_getones(x::Flux.CUDA.CuArray, size) = Flux.CUDA.ones(1, 1, size)
+darnn_getones(x) = darnn_getones(x, size(x, 1))
 Flux.Zygote.@nograd darnn_getones

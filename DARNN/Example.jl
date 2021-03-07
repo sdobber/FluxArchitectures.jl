@@ -6,6 +6,7 @@ using Pkg; Pkg.activate("."); Pkg.instantiate()
 
 @info "Loading packages"
 using Flux, BSON, Plots
+using SliceMap, JuliennedArrays
 include("../shared/Sequentialize.jl")
 include("../data/dataloader.jl")
 include("DARNN.jl")
@@ -45,8 +46,13 @@ end
 # Training loop
 @info "Start loss" loss = loss(input, target)
 @info "Starting training"
-Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20),
-            ADAM(0.007), cb=cb)
+@time Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20),
+            ADAM(0.007), cb=cb)  # 
 
 @info "Finished"
 @info "Final loss" loss = loss(input, target)
+
+# JuliennedArrays:
+# 43.832617 seconds (569.52 M allocations: 20.633 GiB, 14.18% gc time)
+# Zygote.Buffer:
+# 52.620077 seconds (574.22 M allocations: 29.727 GiB, 13.64% gc time)

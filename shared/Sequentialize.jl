@@ -50,15 +50,23 @@ end
 
 Seq(chain) = Seq(chain, [0.0f0])
 
-# e.g. Seq(HiddenRecur(LSTMCell(10, 12))) returns hidden and cell state
-# This variant is elegant but slow
-function (l::Seq)(x)
-    if typeof(l.chain.state) <: Array || typeof(l.chain) <: Flux.Recur
-        l.state = Align(map(l.chain, Slices(x, True(), False())), 1)
-    elseif typeof(l.chain.state) <: Tuple
-        l.state = [Flux.stack(Flux.stack(out, 1)[:,i], 2) for i in 1:length(l.chain.state)]
-    end
-    return l.state
+(l::Seq)(x) = l(l.chain.state, l.chain, x)
+function (l::Seq)(::Array, _, x)
+	l.state = Align(map(l.chain, Slices(x, True(), False())), 1)
+	return l.state
+end
+function (l::Seq)(::Array, ::Flux.Recur, x)
+	l.state = Align(map(l.chain, Slices(x, True(), False())), 1)
+	return l.state
+end
+function (l::Seq)(::Tuple, ::Flux.Recur, x)
+	l.state = Align(map(l.chain, Slices(x, True(), False())), 1)
+	return l.state
+end
+function (l::Seq)(::Tuple, _, x)
+	tuples = map(l.chain, Slices(x, True(), False()))
+	l.state = [Align(map(x -> x[i], tuples), 1) for i in 1:length(l.chain.state)]
+	return l.state
 end
 
 getbuffersize(chain, x) = getbuffersize(typeof(chain), chain.state, x)
