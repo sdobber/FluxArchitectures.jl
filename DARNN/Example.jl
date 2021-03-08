@@ -46,8 +46,8 @@ end
 # Training loop
 @info "Start loss" loss = loss(input, target)
 @info "Starting training"
-@time Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20),
-            ADAM(0.007), cb=cb)  # 
+Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 10),
+            ADAM(0.007), cb=cb)
 
 @info "Finished"
 @info "Final loss" loss = loss(input, target)

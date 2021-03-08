@@ -124,24 +124,24 @@ function (m::DARNNCell)(x)
 	return m.decoder_fc_final(cat(m.decoder_lstm.state[1], context, dims=1))
 end
 
+function _encoder(m::DARNNCell, input_data, slice)
+	hidden = m.encoder_lstm.state[1]
+	cell = m.encoder_lstm.state[2]
+	repeatmat = darnn_getones(input_data)
+
+	x = cat(hidden .* repeatmat, cell .* repeatmat,  # CUDA compatible repeat(hidden, inner=(1,1,size(input_data,1)) etc.
+			permutedims(input_data, [2,3,1]), dims=1)  |>
+		a -> m.encoder_attn(reshape(a, (:, size(input_data, 1) * size(input_data, 3))))
+	attn_weights = Flux.softmax(reshape(x, (size(input_data, 1), size(input_data, 3))))
+	weighted_input = attn_weights .* slice
+	_ = m.encoder_lstm(weighted_input)
+	return m.encoder_lstm.state[1]
+end
+
 function darnn_encoder(m::DARNNCell, input_data)
-	input_encoded = Flux.Zygote.Buffer(input_data, m.encodersize, m.poollength,
-	 				size(input_data, 3))
-	@inbounds for t in 1:m.poollength
-	      hidden = m.encoder_lstm.state[1]
-		  cell = m.encoder_lstm.state[2]
-		  repeatmat = darnn_getones(input_data)
-
-	      x = cat(hidden .* repeatmat, cell .* repeatmat,  # CUDA compatible repeat(hidden, inner=(1,1,size(input_data,1)) etc.
-		  		  permutedims(input_data, [2,3,1]), dims=1)  |>
-	           a -> m.encoder_attn(reshape(a, (:, size(input_data, 1) * size(input_data, 3))))
-	      attn_weights = Flux.softmax(reshape(x, (size(input_data, 1), size(input_data, 3))))
-	      weighted_input = attn_weights .* input_data[:,t,:]
-	      _ = m.encoder_lstm(weighted_input)
-
-	      input_encoded[:,t,:] = Flux.unsqueeze(m.encoder_lstm.state[1], 2)
-	end
-	return copy(input_encoded)
+	sl = Slices(input_data, True(), False(), True())
+	fun = s -> _encoder(m, input_data, s)
+	return Align(map(fun, sl), True(), False(), True())
 end
 
 function darnn_decoder(m::DARNNCell, input_encoded, input_data)
