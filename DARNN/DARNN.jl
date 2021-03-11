@@ -63,10 +63,12 @@ end
 # after a `reset!` of the model.
 function darnn_init(m::DARNNCell, x)
 	s = size(x)
-	m.encoder_lstm(zeros(eltype(x), s[1], s[4]))
-	m.decoder_lstm(zeros(eltype(x), 1, s[4]))
+	m.encoder_lstm(simarray(x, s[1], s[4]))
+	m.decoder_lstm(simarray(x, 1, s[4]))
 	return nothing
 end
+simarray(x, size...) = zero(eltype(x)) .* similar(x, size...)
+
 Flux.Zygote.@nograd darnn_init
 
 # Dispatch on `trainable` and `reset!` to make standard Flux scripts work
@@ -113,7 +115,6 @@ function DARNN(inp::Integer, encodersize::Integer, decodersize::Integer, poollen
 	 		  decoder_fc_final, encodersize, decodersize, orig_idx, poollength)
 end
 
-
 # model output
 function (m::DARNNCell)(x)
 	# Initialize after reset
@@ -138,10 +139,19 @@ function _encoder(m::DARNNCell, input_data, slice)
 	return m.encoder_lstm.state[1]
 end
 
-function darnn_encoder(m::DARNNCell, input_data)
+function darnn_encoder(m::DARNNCell, input_data::Array)
 	sl = Slices(input_data, True(), False(), True())
 	fun = s -> _encoder(m, input_data, s)
 	return Align(map(fun, sl), True(), False(), True())
+end
+
+function darnn_encoder(m::DARNNCell, input_data::Flux.CUDA.CuArray)
+	input_encoded = Flux.Zygote.Buffer(input_data, m.encodersize, m.poollength,
+	 				size(input_data,3))
+	@inbounds for t in 1:m.poollength
+	      input_encoded[:,t,:] = Flux.unsqueeze(_encoder(m, input_data, input_data[:,t,:]),2)
+	end
+	return copy(input_encoded)
 end
 
 function darnn_decoder(m::DARNNCell, input_encoded, input_data)
