@@ -34,4 +34,4 @@ Currently, the following example data from https://github.com/laiguokun/multivar
 
 ## A Note on GPU Calculations
 
-After finally getting access to a Nvidia developer board, I try to extend the models to allow for calculations to be carried out on the GPU using `CUDA.jl`. With the complete lack of prior experience in GPU programming, I cannot guarantee that calculations on the GPU are performed in a resonable or even optimal way. For example in the case of `TPA-LSTM`, training on the GPU turns out to be slower than on the CPU on my hardware. Hints for improvements will be gladly accepted.
+Finally, GPU support for all models has been added! However, it cannot be guaranteed that this is done in an optimal way. Currently, only `DSANet` sees an improvement in training speed on my hardware, whereas all other models train faster on a CPU. The deeper reason is the current limitation of Flux's implementation of RNNs, see this issue https://github.com/FluxML/Flux.jl/issues/1365 that affects all models except `DASNet`, which doesn't use recurrence. 

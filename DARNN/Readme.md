@@ -22,7 +22,7 @@ The network layout is rather complex - please refer to the article cited above f
 
 ## Example File
 
-The example loads some sample data (stemming from a medicinal application - details will not be disclosed) and fits an DA-RNN network to the input features. Whereas the network works for larger datasets, it will just fit the mean for the sample data.
+The example loads some sample data and fits an DA-RNN network to the input features. Whereas the network works for larger datasets, it will just fit the mean for the sample data.
 
 
 ## Known Issues

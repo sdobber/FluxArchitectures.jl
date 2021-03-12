@@ -53,8 +53,3 @@ Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 50),
 
 @info "Finished"
 @info "Final loss" loss = loss(input, target)
-
-# JuliennedArrays:
-# 29.211534 seconds (78.69 M allocations: 6.108 GiB, 14.11% gc time)
-# Zygote.Buffer:
-# 49.157797 seconds (84.25 M allocations: 21.085 GiB, 14.46% gc time)
