@@ -27,7 +27,7 @@ skiplength = 120
 
 # Define the neural net
 model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength,
-        init=Flux.zeros, initW=Flux.zeros, initb=Flux.zeros) |> gpu
+        init=Flux.zeros, initW=Flux.zeros) |> gpu
 
 # MSE loss
 function loss(x, y)

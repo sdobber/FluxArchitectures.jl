@@ -2,7 +2,7 @@
 #
 # Layers for TPA-LSTM
 
-mutable struct TPALSTMCell{A, B, C, D, E, F, G, X, Y, Z}
+mutable struct TPALSTMCell{A,B,C,D,E,F,G,X,Y,Z}
     # Prediction layers
     embedding::A
     output::B
@@ -35,24 +35,24 @@ Data is expected as array with dimensions `features x poolsize x 1 x data`, i.e.
 for 1000 data points containing 31 features that have been windowed over 6
 timesteps, `TPALSTM` expects an input size of `(31, 6, 1, 1000)`.
 
-Takes the keyword arguments `initW` and `initb` for the initialization of the
+Takes the keyword arguments `initW` and `bias` for the initialization of the
 `Dense` layers, and `init` for the initialization of the `StackedLSTM` network.
 """
 function TPALSTM(in::Integer, hiddensize::Integer, poollength::Integer, layers=1,
-	 			filternum=32, filtersize=1; initW = Flux.glorot_uniform, initb = Flux.zeros,
-				init = Flux.glorot_uniform)
+	 			filternum=32, filtersize=1; initW=Flux.glorot_uniform, bias=true,
+				init=Flux.glorot_uniform)
 
-	embedding = Dense(in, hiddensize, Flux.relu; initW = initW, initb = initb)
-    output = Dense(hiddensize, 1; initW = initW, initb = initb)  # 1 could be replaced by output_horizon
-    lstm = Seq(StackedLSTM(hiddensize, hiddensize, hiddensize, layers; init = init))
+	embedding = Dense(in, hiddensize, Flux.relu; init=initW, bias=bias)
+    output = Dense(hiddensize, 1; init=initW, bias=bias)  # 1 could be replaced by output_horizon
+    lstm = Seq(StackedLSTM(hiddensize, hiddensize, hiddensize, layers; init=init))
 
     attention_length = poollength - 1
     attention_size = hiddensize
     attention_feature_size = attention_size - filtersize + 1
     channels = poollength - 1
-    attention_linear1 = Dense(attention_size, filternum; initW = initW, initb = initb)
+    attention_linear1 = Dense(attention_size, filternum; init=initW, bias=bias)
     attention_linear2 = Dense(attention_size + filternum, attention_size;
-							  initW = initW, initb = initb)
+							  init=initW, bias=bias)
     attention_conv = Conv((filtersize, attention_length), 1 => filternum)
 
     return TPALSTMCell(embedding, output, lstm, attention_linear1, attention_linear2,
@@ -72,8 +72,8 @@ function _TPALSTM_attention(H, h_last, m::TPALSTMCell)
     conv_vecs = Flux.relu.(dropdims(m.attention_conv(H_u), dims=2))
     w = m.attention_linear1(h_last) |>
             a -> Flux.unsqueeze(a, 1)
-    alpha = Flux.sigmoid.(sum(conv_vecs.*w, dims=2))
-    v = dropdims(sum(alpha.*conv_vecs, dims=1), dims=1)
+    alpha = Flux.sigmoid.(sum(conv_vecs .* w, dims=2))
+    v = dropdims(sum(alpha .* conv_vecs, dims=1), dims=1)
     concat = cat(h_last, v, dims=1)
     return m.attention_linear2(concat)
 end
@@ -81,9 +81,9 @@ end
 # Get the pooled hidden state from feeding it to the LSTM cell
 # TO DO: Get rid of Zygote.Buffer for speeding things up
 function _TPALSTM_gethidden(inp, m::TPALSTMCell)
-    batchsize = size(inp,3)
-    H = Flux.Zygote.Buffer(inp, m.hiddensize, m.poollength-1, batchsize)  # needs to be off GPU
-    @inbounds for t in 1:m.poollength-1
+    batchsize = size(inp, 3)
+    H = Flux.Zygote.Buffer(inp, m.hiddensize, m.poollength - 1, batchsize)  # needs to be off GPU
+    @inbounds for t in 1:m.poollength - 1
         x = inp[:,t,:]
         xconcat = m.embedding(x)
         hiddenstate = m.lstm(xconcat)
@@ -106,12 +106,12 @@ end
 
 # Pretty printing
 function Base.show(io::IO, l::TPALSTMCell)
-	print(io, "TPALSTM(", size(l.embedding.W,2))
+	print(io, "TPALSTM(", size(l.embedding.W, 2))
 	print(io, ", ", l.hiddensize)
 	print(io, ", ", l.poollength)
 	length(l.lstm.chain.chain) == 1 || print(io, ", ", length(l.lstm.chain.chain))
-	(l.filternum == 32 && size(l.attention_conv.weight,1) == 1) || print(io, ", ", l.filternum)
-	(l.filternum == 32 && size(l.attention_conv.weight,1) == 1) || print(io, ", ", size(l.attention_conv.weight,1))
+	(l.filternum == 32 && size(l.attention_conv.weight, 1) == 1) || print(io, ", ", l.filternum)
+	(l.filternum == 32 && size(l.attention_conv.weight, 1) == 1) || print(io, ", ", size(l.attention_conv.weight, 1))
 	print(io, ")")
 end
 

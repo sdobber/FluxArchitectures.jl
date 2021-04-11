@@ -2,9 +2,9 @@
 #
 # Layers for stacked LSTM
 
-mutable struct StackedLSTMCell{A}
+mutable struct StackedLSTMCell{A,S}
 	chain::A
-	state
+	state::S
 end
 
 """

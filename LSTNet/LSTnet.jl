@@ -5,41 +5,39 @@
 
 # Relu-GRU
 
-mutable struct ReluGRUCell{A,V}
-  Wi::A
-  Wh::A
-  b::V
-  h::V
+mutable struct ReluGRUCell{A,V,S}
+    Wi::A
+    Wh::A
+    b::V
+    state0::S
 end
 
-ReluGRUCell(in, out; init = Flux.glorot_uniform) =
-  ReluGRUCell(init(out*3, in), init(out*3, out),
-          init(out*3), zeros(Float32, out))
+ReluGRUCell(in, out; init=Flux.glorot_uniform, initb=Flux.zeros, init_state=Flux.zeros) =
+  ReluGRUCell(init(out * 3, in), init(out * 3, out), initb(out * 3), init_state(out, 1))
 
-function (m::ReluGRUCell)(h, x)
-  b, o = m.b, size(h, 1)
-  gx, gh = m.Wi*x, m.Wh*h
-  r = σ.(Flux.gate(gx, o, 1) .+ Flux.gate(gh, o, 1) .+ Flux.gate(b, o, 1))
-  z = σ.(Flux.gate(gx, o, 2) .+ Flux.gate(gh, o, 2) .+ Flux.gate(b, o, 2))
-  h̃ = relu.(Flux.gate(gx, o, 3) .+ r .* Flux.gate(gh, o, 3) .+ Flux.gate(b, o, 3))
-  h′ = (1 .- z).*h̃ .+ z.*h
-  return h′, h′
+function (m::ReluGRUCell{A,V,<:AbstractMatrix{T}})(h, x::Union{AbstractVecOrMat{T},Flux.OneHotArray}) where {A,V,T}
+    b, o = m.b, size(h, 1)
+    gx, gh = m.Wi * x, m.Wh * h
+    r = σ.(Flux.gate(gx, o, 1) .+ Flux.gate(gh, o, 1) .+ Flux.gate(b, o, 1))
+    z = σ.(Flux.gate(gx, o, 2) .+ Flux.gate(gh, o, 2) .+ Flux.gate(b, o, 2))
+    h̃ = relu.(Flux.gate(gx, o, 3) .+ r .* Flux.gate(gh, o, 3) .+ Flux.gate(b, o, 3))
+    h′ = (1 .- z) .* h̃ .+ z .* h
+    sz = size(x)
+    return h′, reshape(h′, :, sz[2:end]...)
 end
-
-Flux.hidden(m::ReluGRUCell) = m.h
 
 Flux.@functor ReluGRUCell
 
 Base.show(io::IO, l::ReluGRUCell) =
-  print(io, "ReluGRUCell(", size(l.Wi, 2), ", ", size(l.Wi, 1)÷3, ")")
+  print(io, "ReluGRUCell(", size(l.Wi, 2), ", ", size(l.Wi, 1) ÷ 3, ")")
 
 """
     ReluGRU(in::Integer, out::Integer)
 
 Gated Recurrent Unit layer with `relu` as activation function.
 """
-ReluGRU(a...; ka...) = Flux.Recur(ReluGRUCell(a...; ka...))
-
+ReluGRU(a...; ka...) = Recur(ReluGRUCell(a...; ka...))
+Recur(m::ReluGRUCell) = Flux.Recur(m, m.state0)
 
 # Skip-GRU
 
@@ -53,12 +51,12 @@ SkipGRU(in, out, p ; ka...) = SeqSkip(ReluGRUCell(in, out; ka...), p)
 
 # LSTnet
 
-mutable struct LSTnetCell{A, B, C, D, G}
-  ConvLayer::A
-  RecurLayer::B
-  RecurSkipLayer::C
-  RecurDense::D
-  AutoregLayer::G
+mutable struct LSTnetCell{A,B,C,D,G}
+    ConvLayer::A
+    RecurLayer::B
+    RecurSkipLayer::C
+    RecurDense::D
+    AutoregLayer::G
 end
 
 """
@@ -77,17 +75,17 @@ for 1000 data points containing 31 features that have been windowed over 6
 timesteps, `LSTNet` expects an input size of `(31, 6, 1, 1000)`.
 
 Takes the keyword arguments `init` for the initialization of the recurrent
-layers; and `initW` and `initb` for the initialization of the dense layer.
+layers; and `initW` and `bias` for the initialization of the dense layer.
 """
-function LSTnet(in::Integer, convlayersize::Integer, recurlayersize::Integer, poolsize::Integer, skiplength::Integer, σ = Flux.relu;
-	init = Flux.glorot_uniform, initW = Flux.glorot_uniform, initb = Flux.zeros)
+function LSTnet(in::Integer, convlayersize::Integer, recurlayersize::Integer, poolsize::Integer, skiplength::Integer, σ=Flux.relu;
+	init=Flux.glorot_uniform, initW=Flux.glorot_uniform, bias=true)
 
 	CL = Chain(Conv((in, poolsize), 1 => convlayersize, σ),
-			a -> dropdims(a, dims = (1,2)))
-	RL = Seq(ReluGRU(convlayersize,recurlayersize; init = init))
-	RSL = SkipGRU(convlayersize,recurlayersize, skiplength; init = init)
-	RD = Chain(Dense(2*recurlayersize, 1, identity))
-	AL = Chain(a -> a[:,end,1,:], Dense(in, 1 , identity; initW = initW, initb = initb) )
+			a -> dropdims(a, dims=(1, 2)))
+	RL = Seq(ReluGRU(convlayersize, recurlayersize; init=init))
+	RSL = SkipGRU(convlayersize, recurlayersize, skiplength; init=init)
+	RD = Chain(Dense(2 * recurlayersize, 1, identity))
+	AL = Chain(a -> a[:,end,1,:], Dense(in, 1, identity; init=initW, bias=bias))
 
     LSTnetCell(CL, RL, RSL, RD, AL)
 end
@@ -100,12 +98,12 @@ function (m::LSTnetCell)(x)
 end
 
 function Base.show(io::IO, l::LSTnetCell)
-  print(io, "LSTnet(", size(l.ConvLayer[1].weight,1))
-  print(io, ", ", size(l.RecurLayer.chain.cell.Wi, 2), ", ", size(l.RecurLayer.chain.cell.Wi, 1)÷3 )
-  print(io, ", ", size(l.ConvLayer[1].weight,2))
-  print(io, ", ", l.RecurSkipLayer.p)
-  l.ConvLayer[1].σ == Flux.relu || print(io, ", ", l.ConvLayer[1].σ)
-  print(io, ")")
+    print(io, "LSTnet(", size(l.ConvLayer[1].weight, 1))
+    print(io, ", ", size(l.RecurLayer.chain.cell.Wi, 2), ", ", size(l.RecurLayer.chain.cell.Wi, 1) ÷ 3)
+    print(io, ", ", size(l.ConvLayer[1].weight, 2))
+    print(io, ", ", l.RecurSkipLayer.p)
+    l.ConvLayer[1].σ == Flux.relu || print(io, ", ", l.ConvLayer[1].σ)
+    print(io, ")")
 end
 
 Flux.@functor LSTnetCell

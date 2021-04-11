@@ -15,13 +15,12 @@ cell state.
 
 See also: [`Recur`](@ref)
 """
-mutable struct HiddenRecur{T}
+mutable struct HiddenRecur{T,S}
     cell::T
-    init
-    state
+    state::S
 end
 
-HiddenRecur(m, h=Flux.hidden(m)) = HiddenRecur(m, h, h)
+HiddenRecur(m) = HiddenRecur(m, m.state0)
 
 function (m::HiddenRecur)(xs...)
     h, y = m.cell(m.state, xs...)
@@ -29,10 +28,11 @@ function (m::HiddenRecur)(xs...)
     return h  # collect(h)
 end
 
-Flux.@functor HiddenRecur cell, init
+Flux.@functor HiddenRecur
+trainable(a::HiddenRecur) = (a.cell,)
 
 Base.show(io::IO, m::HiddenRecur) = print(io, "HiddenRecur(", m.cell, ")")
-Flux.reset!(m::HiddenRecur) = (m.state = m.init)
+Flux.reset!(m::HiddenRecur) = (m.state = m.cell.state0)
 Flux.trainable(m::HiddenRecur) = (m.cell,)
 
 
@@ -67,7 +67,7 @@ function (l::Seq)(::Tuple, ::Flux.Recur, x)
 end
 function (l::Seq)(::Tuple, _, x)
 	tuples = map(l.chain, Slices(x, True(), False()))
-	l.state = [Align(map(x -> x[i], tuples), 1) for i in 1:length(l.chain.state)]
+	l.state = [Align(map(x -> dropdims(x[i], dims=2), tuples), 1) for i in 1:length(l.chain.state)]
 	return l.state
 end
 
@@ -103,7 +103,7 @@ function (l::Seq)(::Flux.CUDA.CuArray, _, x)
 	return l.state
 end
 
-function (l::Seq)(::Tuple{Flux.CUDA.CuArray, Flux.CUDA.CuArray}, _, x)
+function (l::Seq)(::Tuple{Flux.CUDA.CuArray,Flux.CUDA.CuArray}, _, x)
 	l.state = writebuffer(l.chain, x)
 	return l.state
 end
@@ -136,15 +136,14 @@ input features as elements of a time series.
 
 See also: [`Seq`](@ref), [Recur](@ref)
 """
-mutable struct SeqSkip{T}
+mutable struct SeqSkip{T,P}
 	cell::T
-	p  # skiplength
-	init
+	p::P  # skiplength
 	state  # current cell state
 	fullstate  # cell states over time series
 end
 
-SeqSkip(m, p, h=Flux.hidden(m)) = SeqSkip(m, p, h, h, h)
+SeqSkip(m, p) = SeqSkip(m, p, m.state0, m.state0)
 
 getbuffersize(::Type{<:SeqSkip}, state::AbstractArray, x) = ((length(state), size(x, 2)), 1)
 getbuffersize(::Type{<:SeqSkip}, state::Tuple, x) = ((length(state[1]), size(x, 2)), length(state))
@@ -188,4 +187,4 @@ end
 Flux.@functor SeqSkip
 
 Base.show(io::IO, m::SeqSkip) = print(io, "SeqSkip(", m.cell, ")")
-Flux.reset!(m::SeqSkip) = (m.state = m.init)
+Flux.reset!(m::SeqSkip) = (m.state = m.cell.state0)

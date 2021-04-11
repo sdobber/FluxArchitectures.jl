@@ -19,7 +19,7 @@ datalength = 4000
 input, target = get_data(:exchange_rate, poollength, datalength, horizon) |> gpu
 
 # Define the network architecture
-inputsize = size(input,1)
+inputsize = size(input, 1)
 local_length = 3
 n_kernels = 3
 d_model = 4
@@ -34,25 +34,26 @@ model = DSANet(inputsize, poollength, local_length, n_kernels, d_model,
                hiddensize, n_layers, n_head) |> gpu
 
 # MSE loss
-function loss(x,y)
-  Flux.reset!(model)
-  return Flux.mse(model(x),y')
+function loss(x, y)
+    Flux.reset!(model)
+    return Flux.mse(model(x), y')
 end
 
 # Callback for plotting the training
-cb = function()
-  Flux.reset!(model)
-  pred = model(input)' |> cpu
-  Flux.reset!(model)
-  p1=plot(pred, label="Predict")
-  p1=plot!(cpu(target), label="Data", title="Loss $(loss(input,target))")
-  display(plot(p1))
+cb = function ()
+    Flux.reset!(model)
+    pred = model(input)' |> cpu
+    Flux.reset!(model)
+    p1 = plot(pred, label="Predict")
+    p1 = plot!(cpu(target), label="Data", title="Loss $(loss(input, target))")
+    display(plot(p1))
 end
 
 # Training loop
 @info "Starting training"
-Flux.@epochs 5 Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target),5),
+@info "Start loss" loss = loss(input, target)
+Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 50),
              ADAM(0.005), cb=cb)
 
 @info "Finished"
-@info "Final loss" loss=loss(input,target)
+@info "Final loss" loss = loss(input, target)

@@ -5,23 +5,23 @@
 # Network for Time Series Prediction" https://arxiv.org/abs/1704.02971
 
 # Copy LSTM Code to prevent its special CUDA implementation
-mutable struct FALSTMCell{A,V}
+struct FALSTMCell{A,V,S}
 	Wi::A
 	Wh::A
 	b::V
-	h::V
-	c::V
+	state0::S
 end
   
 function FALSTMCell(in::Integer, out::Integer;
-				init=Flux.glorot_uniform)
-	cell = FALSTMCell(init(out * 4, in), init(out * 4, out), init(out * 4),
-					Flux.zeros(out), Flux.zeros(out))
+		init=Flux.glorot_uniform,
+		initb=Flux.zeros,
+		init_state=Flux.zeros)
+	cell = FALSTMCell(init(out * 4, in), init(out * 4, out), initb(out * 4), (init_state(out, 1), init_state(out, 1)))
 	cell.b[Flux.gate(out, 2)] .= 1
 	return cell
 end
 
-function (m::FALSTMCell)((h, c), x)
+function (m::FALSTMCell{A,V,<:NTuple{2,AbstractMatrix{T}}})((h, c), x::Union{AbstractVecOrMat{T},Flux.OneHotArray}) where {A,V,T}
 	b, o = m.b, size(h, 1)
 	g = m.Wi * x .+ m.Wh * h .+ b
 	input = σ.(Flux.gate(g, o, 1))
@@ -30,17 +30,15 @@ function (m::FALSTMCell)((h, c), x)
 	output = σ.(Flux.gate(g, o, 4))
 	c = forget .* c .+ input .* cell
 	h′ = output .* tanh.(c)
-	return (h′, c), h′
+	sz = size(x)
+	return (h′, c), reshape(h′, :, sz[2:end]...)
 end
 
-Flux.hidden(m::FALSTMCell) = (m.h, m.c)
-
 Flux.@functor FALSTMCell
+Recur(m::FALSTMCell) = Flux.Recur(m, m.state0)
 
 Base.show(io::IO, l::FALSTMCell) =
-print(io, "FALSTMCell(", size(l.Wi, 2), ", ", size(l.Wi, 1) ÷ 4, ")")
-
-FALSTM(a...; ka...) = Recur(FALSTMCell(a...; ka...))
+	print(io, "FALSTMCell(", size(l.Wi, 2), ", ", size(l.Wi, 1) ÷ 4, ")")
 
 # struct that stores layers and some extra information
 mutable struct DARNNCell{A,B,C,D,E,F,W,X,Y,Z}
@@ -67,7 +65,7 @@ function darnn_init(m::DARNNCell, x)
 	m.decoder_lstm(simarray(x, 1, s[4]))
 	return nothing
 end
-simarray(x, size...) = zero(eltype(x)) .* similar(x, size...)
+simarray(x, size...) = zeros(eltype(x), size...)
 
 Flux.Zygote.@nograd darnn_init
 
@@ -92,24 +90,24 @@ Data is expected as array with dimensions `features x poolsize x 1 x data`, i.e.
 for 1000 data points containing 31 features that have been windowed over 6
 timesteps, `DARNN` expects an input size of `(31, 6, 1, 1000)`.
 
-Takes the keyword arguments `initW` and `initb` for the initialization of the
+Takes the keyword arguments `init` and `bias` for the initialization of the
 weight vector and bias of the linear layers.
 """
 function DARNN(inp::Integer, encodersize::Integer, decodersize::Integer, poollength::Integer, orig_idx::Integer;
-	initW=Flux.glorot_uniform, initb=Flux.zeros)
+	init=Flux.glorot_uniform, bias=true)
 
 	# Encoder part
 	encoder_lstm = Seq(HiddenRecur(FALSTMCell(inp, encodersize)))
-	encoder_attn = Chain(Dense(2 * encodersize + poollength, poollength, initW=initW, initb=initb),
+	encoder_attn = Chain(Dense(2 * encodersize + poollength, poollength, init=init, bias=bias),
 	                    a -> tanh.(a),
-	                    Dense(poollength, 1, initW=initW, initb=initb))
+	                    Dense(poollength, 1, init=init, bias=bias))
 	# Decoder part
 	decoder_lstm = Seq(HiddenRecur(FALSTMCell(1, decodersize)))
-	decoder_attn = Chain(Dense(2 * decodersize + encodersize, encodersize, initW=initW, initb=initb),
+	decoder_attn = Chain(Dense(2 * decodersize + encodersize, encodersize, init=init, bias=bias),
 	                    a -> tanh.(a),
-	                    Dense(encodersize, 1, initW=initW, initb=initb))
+	                    Dense(encodersize, 1, init=init, bias=bias))
 	decoder_fc = Dense(encodersize + 1, 1)
-	decoder_fc_final = Dense(decodersize + encodersize, 1, initW=initW, initb=initb)
+	decoder_fc_final = Dense(decodersize + encodersize, 1, init=init, bias=bias)
 
 	return DARNNCell(encoder_lstm, encoder_attn, decoder_lstm, decoder_attn, decoder_fc,
 	 		  decoder_fc_final, encodersize, decodersize, orig_idx, poollength)
@@ -147,9 +145,9 @@ end
 
 function darnn_encoder(m::DARNNCell, input_data::Flux.CUDA.CuArray)
 	input_encoded = Flux.Zygote.Buffer(input_data, m.encodersize, m.poollength,
-	 				size(input_data,3))
+	 				size(input_data, 3))
 	@inbounds for t in 1:m.poollength
-	      input_encoded[:,t,:] = Flux.unsqueeze(_encoder(m, input_data, input_data[:,t,:]),2)
+	      input_encoded[:,t,:] = Flux.unsqueeze(_encoder(m, input_data, input_data[:,t,:]), 2)
 	end
 	return copy(input_encoded)
 end
@@ -183,7 +181,7 @@ function Base.show(io::IO, l::DARNNCell)
 end
 
 # Helper functions to replace `repeat` with CUDA friendly version
-darnn_getones(x::Array, size) = ones(1, 1, size)
+darnn_getones(x::Array, size) = Flux.ones(1, 1, size)
 darnn_getones(x::Flux.CUDA.CuArray, size) = Flux.CUDA.ones(1, 1, size)
 darnn_getones(x) = darnn_getones(x, size(x, 1))
 Flux.Zygote.@nograd darnn_getones
