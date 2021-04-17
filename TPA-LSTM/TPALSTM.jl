@@ -106,7 +106,7 @@ end
 
 # Pretty printing
 function Base.show(io::IO, l::TPALSTMCell)
-	print(io, "TPALSTM(", size(l.embedding.W, 2))
+	print(io, "TPALSTM(", size(l.embedding.weight, 2))
 	print(io, ", ", l.hiddensize)
 	print(io, ", ", l.poollength)
 	length(l.lstm.chain.chain) == 1 || print(io, ", ", length(l.lstm.chain.chain))
