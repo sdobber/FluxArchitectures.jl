@@ -3,7 +3,7 @@
 # Run some benchmarks for FluxArchitectures
 
 # Settings
-const RUN_GPU = false
+const RUN_GPU = true
 const RUN_CPU = true
 
 # Make sure all the required packages are available
