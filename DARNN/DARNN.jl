@@ -11,7 +11,7 @@ struct FALSTMCell{A,V,S}
 	b::V
 	state0::S
 end
-  
+
 function FALSTMCell(in::Integer, out::Integer;
 		init=Flux.glorot_uniform,
 		initb=Flux.zeros,
@@ -65,6 +65,7 @@ function darnn_init(m::DARNNCell, x)
 	m.decoder_lstm(simarray(x, 1, s[4]))
 	return nothing
 end
+simarray(x::Flux.CUDA.CuArray, size...) = Flux.CUDA.zeros(eltype(x), size...)
 simarray(x, size...) = zeros(eltype(x), size...)
 
 Flux.Zygote.@nograd darnn_init
