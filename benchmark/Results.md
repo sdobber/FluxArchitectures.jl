@@ -60,10 +60,38 @@ Environment:
 Status `D:\Dokumente\Soeren Programmieren\FluxArchitectures\benchmark\Project.toml`
   [fbb218c0] BSON v0.2.6
   [6e4b80f9] BenchmarkTools v0.5.0
+  [052768ef] CUDA v2.4.1
   [a93c6f00] DataFrames v0.22.7
   [587475ba] Flux v0.11.5
   [5cadff95] JuliennedArrays v0.2.2
   [82cb661a] SliceMap v0.2.3
+```
+
+```julia-repl
+Flux.CUDA.versioninfo()
+CUDA toolkit 10.2.89, artifact installation
+CUDA driver 10.2.0
+NVIDIA driver 430.86.0
+
+Libraries:
+- CUBLAS: 10.2.2
+- CURAND: 10.1.2
+- CUFFT: 10.1.2
+- CUSOLVER: 10.3.0
+- CUSPARSE: 10.3.1
+- CUPTI: 12.0.0
+- NVML: 10.0.0+430.86
+- CUDNN: 8.0.4 (for CUDA 10.2.0)
+- CUTENSOR: 1.2.1 (for CUDA 10.2.0)
+
+Toolchain:
+- Julia: 1.5.3
+- LLVM: 9.0.1
+- PTX ISA support: 3.2, 4.0, 4.1, 4.2, 4.3, 5.0, 6.0, 6.1, 6.3, 6.4
+- Device support: sm_30, sm_32, sm_35, sm_37, sm_50, sm_52, sm_53, sm_60, sm_61, sm_62, sm_70, sm_72, sm_75
+
+1 device:
+  0: GeForce GTX 960M (sm_50, 3.894 GiB / 4.000 GiB available)
 ```
 
 ### Results
@@ -137,11 +165,39 @@ Environment:
 Status `D:\Dokumente\Soeren Programmieren\FluxArchitectures\benchmark\Project.toml`
   [fbb218c0] BSON v0.3.3
   [6e4b80f9] BenchmarkTools v0.7.0
+  [052768ef] CUDA v2.4.3
   [a93c6f00] DataFrames v0.22.7
   [587475ba] Flux v0.12.1
   [5cadff95] JuliennedArrays v0.2.2
   [82cb661a] SliceMap v0.2.4
   [e88e6eb3] Zygote v0.6.9
+```
+
+```julia-repl
+Flux.CUDA.versioninfo()
+CUDA toolkit 10.2.89, artifact installation
+CUDA driver 10.2.0
+NVIDIA driver 430.86.0
+
+Libraries:
+- CUBLAS: 10.2.2
+- CURAND: 10.1.2
+- CUFFT: 10.1.2
+- CUSOLVER: 10.3.0
+- CUSPARSE: 10.3.1
+- CUPTI: 12.0.0
+- NVML: 10.0.0+430.86
+- CUDNN: 8.0.4 (for CUDA 10.2.0)
+- CUTENSOR: 1.2.1 (for CUDA 10.2.0)
+
+Toolchain:
+- Julia: 1.5.3
+- LLVM: 9.0.1
+- PTX ISA support: 3.2, 4.0, 4.1, 4.2, 4.3, 5.0, 6.0, 6.1, 6.3, 6.4
+- Device support: sm_30, sm_32, sm_35, sm_37, sm_50, sm_52, sm_53, sm_60, sm_61, sm_62, sm_70, sm_72, sm_75
+
+1 device:
+  0: GeForce GTX 960M (sm_50, 3.894 GiB / 4.000 GiB available)
 ```
 
 ### Results
