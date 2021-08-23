@@ -4,7 +4,6 @@
 # The current Flux.jl setup does not allow to feed sequences as a matrix to a recurrent
 # network. The constructions in this file help to unwrap a matrix to a sequence, apply
 # an RNN and then wrap things up again.
-include("StackedLSTM.jl")
 
 """
     HiddenRecur(cell)
@@ -115,8 +114,7 @@ end
 
 function Flux.reset!(m::Seq)
     Flux.reset!(m.chain)
-    m.state = [0.0f0]
-    return nothing
+    # m.state = [0.0f0]  # this return value makes Zygote crash - why?
 end
 
 Flux.@functor Seq

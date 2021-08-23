@@ -1,7 +1,10 @@
+name = "FluxArchitectures"
+uuid = "53d20848-f986-4c56-957e-0e417ec068db"
+authors = ["Sören Dobberschütz <sdobberschuetz@gmx.net>"]
+version = "0.1.0"
+
 [deps]
 BSON = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 JuliennedArrays = "5cadff95-7770-533d-a838-a1bf817ee6e0"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"

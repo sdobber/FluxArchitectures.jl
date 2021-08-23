@@ -1,33 +1,37 @@
-## Example for using TPA-LSTM
+## Example for using DSANet
 
 # Make sure all the required packages are available
 cd(@__DIR__)
-using Pkg; Pkg.activate("."); Pkg.instantiate()
+using Pkg; Pkg.activate(".")
+Pkg.instantiate()
 
 @info "Loading packages"
-using Flux, BSON, Plots
-using SliceMap, JuliennedArrays
-include("../shared/Sequentialize.jl")
-include("../data/dataloader.jl")
-include("TPALSTM.jl")
+include("../src/FluxArchitectures.jl")
+using .FluxArchitectures
+using Random
+using Plots
 
 # Load some sample data
 @info "Loading data"
 poollength = 10
 horizon = 6
-datalength = 2000
-input, target = get_data(:solar, poollength, datalength, horizon) |> gpu
+datalength = 4000
+input, target = get_data(:exchange_rate, poollength, datalength, horizon) |> gpu
 
 # Define the network architecture
-@info "Creating model and loss"
 inputsize = size(input, 1)
-hiddensize = 10
-layers = 2
-filternum = 32
-filtersize = 1
+local_length = 3
+n_kernels = 3
+d_model = 4
+hiddensize = 1
+n_layers = 3
+n_head = 2
 
 # Define the neural net
-model = TPALSTM(inputsize, hiddensize, poollength, layers, filternum, filtersize) |> gpu
+@info "Creating model and loss"
+Random.seed!(123)
+model = DSANet(inputsize, poollength, local_length, n_kernels, d_model,
+               hiddensize, n_layers, n_head) |> gpu
 
 # MSE loss
 function loss(x, y)
@@ -46,10 +50,10 @@ cb = function ()
 end
 
 # Training loop
-@info "Start loss" loss = loss(input, target)
 @info "Starting training"
+@info "Start loss" loss = loss(input, target)
 Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 50),
-            ADAM(0.02), cb=cb)
+             ADAM(0.005), cb=cb)
 
 @info "Finished"
 @info "Final loss" loss = loss(input, target)

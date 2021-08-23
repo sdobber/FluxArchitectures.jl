@@ -12,7 +12,7 @@ mutable struct ReluGRUCell{A,V,S}
     state0::S
 end
 
-ReluGRUCell(in, out; init=Flux.glorot_uniform, initb=Flux.zeros, init_state=Flux.zeros) =
+ReluGRUCell(in, out; init=Flux.glorot_uniform, initb=Flux.zeros32, init_state=Flux.zeros32) =
   ReluGRUCell(init(out * 3, in), init(out * 3, out), initb(out * 3), init_state(out, 1))
 
 function (m::ReluGRUCell{A,V,<:AbstractMatrix{T}})(h, x::Union{AbstractVecOrMat{T},Flux.OneHotArray}) where {A,V,T}
@@ -108,7 +108,7 @@ end
 
 Flux.@functor LSTnetCell
 Flux.params(m::LSTnetCell) = Flux.params(m.ConvLayer, m.RecurLayer, m.RecurSkipLayer, m.RecurDense, m.AutoregLayer)
-Flux.reset!(m::LSTnetCell) = Flux.reset!.((m.ConvLayer, m.RecurLayer, m.RecurSkipLayer, m.RecurDense, m.AutoregLayer))
+Flux.reset!(m::LSTnetCell) = foreach(Flux.reset!, (m.ConvLayer, m.RecurLayer, m.RecurSkipLayer, m.RecurDense, m.AutoregLayer))
 
 # Initialize forget gate bias with -1
 function initialize_bias!(l::LSTnetCell)

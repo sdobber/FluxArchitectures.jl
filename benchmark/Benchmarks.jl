@@ -8,17 +8,15 @@ const RUN_CPU = true
 
 # Make sure all the required packages are available
 cd(@__DIR__)
-using Pkg; Pkg.activate("."); Pkg.instantiate()
+using Pkg; Pkg.activate(".")
+Pkg.instantiate()
 
 @info "Loading packages"
-using Flux, BSON, BenchmarkTools, DataFrames
-using SliceMap, JuliennedArrays, Random
-include("../shared/Sequentialize.jl")
-include("../data/dataloader.jl")
-include("../DARNN/DARNN.jl")
-include("../DSANet/DSANet.jl")
-include("../LSTNet/LSTNet.jl")
-include("../TPA-LSTM/TPALSTM.jl")
+include("../src/FluxArchitectures.jl")
+using .FluxArchitectures
+using BenchmarkTools
+using DataFrames
+using Random
 
 # Initialize results dataframe
 results = DataFrame(Name=String[], CPU=Union{Missing,Float32}[], GPU=Union{Missing,Float32}[])

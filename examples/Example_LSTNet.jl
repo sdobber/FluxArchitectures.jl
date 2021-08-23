@@ -1,37 +1,31 @@
-## Example for using DSANet
+## Example for using LSTNet
 
 # Make sure all the required packages are available
 cd(@__DIR__)
 using Pkg; Pkg.activate(".")
 Pkg.instantiate()
 
-@info "Loading packages"
-using Flux, BSON, Plots
-using Random
-include("DSANet.jl")
-include("../data/dataloader.jl")
+include("../src/FluxArchitectures.jl")
+using .FluxArchitectures
+using Plots
 
 # Load some sample data
 @info "Loading data"
 poollength = 10
 horizon = 6
-datalength = 4000
+datalength = 1000
 input, target = get_data(:exchange_rate, poollength, datalength, horizon) |> gpu
 
 # Define the network architecture
+@info "Creating model and loss"
 inputsize = size(input, 1)
-local_length = 3
-n_kernels = 3
-d_model = 4
-hiddensize = 1
-n_layers = 3
-n_head = 2
+convlayersize = 2
+recurlayersize = 3
+skiplength = 120
 
 # Define the neural net
-@info "Creating model and loss"
-Random.seed!(123)
-model = DSANet(inputsize, poollength, local_length, n_kernels, d_model,
-               hiddensize, n_layers, n_head) |> gpu
+model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength,
+        init=Flux.zeros32, initW=Flux.zeros32) |> gpu
 
 # MSE loss
 function loss(x, y)
@@ -50,10 +44,10 @@ cb = function ()
 end
 
 # Training loop
-@info "Starting training"
 @info "Start loss" loss = loss(input, target)
-Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 50),
-             ADAM(0.005), cb=cb)
+@info "Starting training"
+Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20),
+            ADAM(0.01), cb=cb)
 
 @info "Finished"
 @info "Final loss" loss = loss(input, target)

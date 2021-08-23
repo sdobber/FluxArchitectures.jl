@@ -14,8 +14,8 @@ end
 
 function FALSTMCell(in::Integer, out::Integer;
 		init=Flux.glorot_uniform,
-		initb=Flux.zeros,
-		init_state=Flux.zeros)
+		initb=Flux.zeros32,
+		init_state=Flux.zeros32)
 	cell = FALSTMCell(init(out * 4, in), init(out * 4, out), initb(out * 4), (init_state(out, 1), init_state(out, 1)))
 	cell.b[Flux.gate(out, 2)] .= 1
 	return cell
@@ -73,7 +73,7 @@ Flux.Zygote.@nograd darnn_init
 # Dispatch on `trainable` and `reset!` to make standard Flux scripts work
 Flux.trainable(m::DARNNCell) = (m.encoder_lstm, m.encoder_attn, m.decoder_lstm,
     m.decoder_attn, m.decoder_fc, m.decoder_fc_final)
-Flux.reset!(m::DARNNCell) = Flux.reset!.((m.encoder_lstm, m.decoder_lstm))
+Flux.reset!(m::DARNNCell) = foreach(Flux.reset!, (m.encoder_lstm, m.decoder_lstm))
 Flux.@functor DARNNCell
 
 """
@@ -154,7 +154,7 @@ function darnn_encoder(m::DARNNCell, input_data::Flux.CUDA.CuArray)
 end
 
 function darnn_decoder(m::DARNNCell, input_encoded, input_data)
-	context = Flux.zeros(m.encodersize, size(input_data, 3))
+	context = Flux.zeros32(m.encodersize, size(input_data, 3))
 	@inbounds for t in 1:m.poollength
 	      hidden = m.decoder_lstm.state[1]
 		  cell = m.decoder_lstm.state[2]
@@ -182,7 +182,7 @@ function Base.show(io::IO, l::DARNNCell)
 end
 
 # Helper functions to replace `repeat` with CUDA friendly version
-darnn_getones(x::Array, size) = Flux.ones(1, 1, size)
+darnn_getones(x::Array, size) = Flux.ones32(1, 1, size)
 darnn_getones(x::Flux.CUDA.CuArray, size) = Flux.CUDA.ones(1, 1, size)
 darnn_getones(x) = darnn_getones(x, size(x, 1))
 Flux.Zygote.@nograd darnn_getones
