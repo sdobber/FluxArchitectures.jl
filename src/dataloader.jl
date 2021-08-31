@@ -13,7 +13,9 @@ function get_data(dataset, poollength, datalength, horizon; normalise=true)
     dataset in admissible || error("Sample data not implemented")
 
     # Improve and make independent of location!
-    if isdir("./data")
+    if !isnothing(pkgdir(FluxArchitectures))
+        datadir = joinpath(pkgdir(FluxArchitectures), "data")
+    elseif isdir("./data")
         datadir = "./data"
     elseif isdir("../data")
         datadir = "../data"
