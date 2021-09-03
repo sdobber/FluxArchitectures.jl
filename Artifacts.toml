@@ -1,0 +1,7 @@
+[sample_data]
+git-tree-sha1 = "9fde83c2da094cf820f86dbc46f6077cd86af378"
+lazy = true
+
+    [[sample_data.download]]
+    url = "https://github.com/sdobber/FA_data/raw/main/data.tar.gz"
+    sha256 = "c345616bd1ce711e69939d09fe8f15ecd68711cdafcf800b5cbe2fda9c78c779"

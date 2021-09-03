@@ -12,23 +12,13 @@ function get_data(dataset, poollength, datalength, horizon; normalise=true)
     admissible = [:solar, :traffic, :exchange_rate, :electricity]
     dataset in admissible || error("Sample data not implemented")
 
-    # Improve and make independent of location!
-    if !isnothing(pkgdir(FluxArchitectures))
-        datadir = joinpath(pkgdir(FluxArchitectures), "data")
-    elseif isdir("./data")
-        datadir = "./data"
-    elseif isdir("../data")
-        datadir = "../data"
-    else
-        error("Unknown data location")
-    end
-
-    datalength = datalength + poollength
+    datadir = joinpath(artifact"sample_data", "data")
     (dataset == :solar) && (BSON.@load joinpath(datadir, "solar_AL.bson") inp_raw)
     (dataset == :traffic) && (BSON.@load joinpath(datadir, "traffic.bson") inp_raw)
     (dataset == :exchange_rate) && (BSON.@load joinpath(datadir, "exchange_rate.bson") inp_raw)
     (dataset == :electricity) && (BSON.@load joinpath(datadir, "electricity.bson") inp_raw)
 
+    datalength = datalength + poollength
     (normalise == true) && (inp_raw = Flux.normalise(inp_raw, dims=1))
     out_ft = similar(inp_raw, size(inp_raw, 2), poollength, 1, size(inp_raw, 1))
     for i = 0:poollength - 1

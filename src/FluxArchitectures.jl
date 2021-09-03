@@ -8,6 +8,7 @@ using Reexport
 using BSON
 using JuliennedArrays
 using SliceMap
+using LazyArtifacts
 
 include("./shared/StackedLSTM.jl")
 include("./shared/Sequentialize.jl")
