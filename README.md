@@ -1,5 +1,9 @@
 # FluxArchitectures
 
+[![Build Status](https://github.com/sdobber/FluxArchitectures.jl/workflows/CI/badge.svg)](https://github.com/sdobber/FluxArchitectures.jl/actions)
+[![Coverage](https://codecov.io/gh/sdobber/FluxArchitectures.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/sdobber/FluxArchitectures.jl)
+
+
 Complex neural network examples for Flux.jl.
 
 When I started to dig into `Flux.jl`, almost all the examples I could find only presented small neural networks, or networks comprised of standard building bricks. This repository contains a loose collection of (slightly) more advanced network architectures, mostly centered around time series forecasting.
@@ -9,7 +13,7 @@ When I started to dig into `Flux.jl`, almost all the examples I could find only 
 
 FluxArchitectures is *not* a registered package. To install, type `]` to activate the package manager, and use
 ```julia
-dev https://github.com/sdobber/FluxArchitectures
+dev https://github.com/sdobber/FluxArchitectures.jl
 ```
 for installation. After `using FluxArchitectures`, the following functions are exported:
 * `get_data`
