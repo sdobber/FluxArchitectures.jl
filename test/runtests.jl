@@ -9,8 +9,8 @@ end
     include("DSANet.jl")
 end
 
-@testset "LSTNet" begin
-    include("LSTNet.jl")
+@testset "LSTnet" begin
+    include("LSTnet.jl")
 end
 
 @testset "TPALSTM" begin
