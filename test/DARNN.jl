@@ -5,6 +5,9 @@
     x = rand(Float32, inputsize, poollength, 1, datalength)
     m = DARNN(inputsize, 10, 10, poollength, 1)
     @test size(m(x)) == (1, datalength)
+    if Flux.use_cuda[]
+        @test size(gpu(m)(gpu(x))) == (1, datalength)
+    end
 end 
 
 @testset "misc" begin

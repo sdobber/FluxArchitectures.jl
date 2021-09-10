@@ -1,6 +1,12 @@
 using FluxArchitectures
 using Test
 
+if Flux.use_cuda[]
+    @info "Testing GPU support"
+else
+    @warn "CUDA unavailable, not testing GPU support"
+end
+
 @testset "DARNN" begin
     include("DARNN.jl")
 end

@@ -6,6 +6,9 @@
     end
     @test repr(FluxArchitectures.StackedLSTM(20, 10, 3, 1)) == "Recur(LSTMCell(20, 10))"
     @test repr(FluxArchitectures.StackedLSTM(20, 10, 3, 2)) == "StackedLSTM(20, 10, 3, 2)"
+    m = FluxArchitectures.StackedLSTM(20, 10, 3, 5)
+    FluxArchitectures.initialize_bias!(m)
+    @test all([all(m.chain[i].cell.b .== 1) for i in 1:length(m.chain)])
 end 
 
 @testset "HiddenRecur" begin
