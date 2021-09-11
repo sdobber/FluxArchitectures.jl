@@ -15,5 +15,5 @@ end
         input, target = get_data(dataset, poollength, datalength, horizon)
         @test size(input, 1) >= 1
     end
-    @test_throws ErrorException get_data(:mnist, poollength, datalength, horizon)
+    @test_throws ArgumentError get_data(:mnist, poollength, datalength, horizon)
 end

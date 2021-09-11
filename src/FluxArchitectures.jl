@@ -18,6 +18,6 @@ include("DSANet.jl")
 include("LSTnet.jl")
 include("TPALSTM.jl")
 
-export get_data, DARNN, DSANet, LSTnet, TPALSTM
+export DARNN, DSANet, LSTnet, TPALSTM, get_data, prepare_data
 
 end # module
