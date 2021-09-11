@@ -6,7 +6,7 @@
 
 Complex neural network examples for Flux.jl.
 
-When I started to dig into `Flux.jl`, almost all the examples I could find only presented small neural networks, or networks comprised of standard building bricks. This repository contains a loose collection of (slightly) more advanced network architectures, mostly centered around time series forecasting.
+This package contains a loose collection of (slightly) more advanced neural network architectures, mostly centered around time series forecasting.
 
 
 ## Installation
@@ -16,6 +16,7 @@ FluxArchitectures is *not* a registered package. To install, type `]` to activat
 dev https://github.com/sdobber/FluxArchitectures.jl
 ```
 for installation. After `using FluxArchitectures`, the following functions are exported:
+* `prepare_data`
 * `get_data`
 * `DARNN`
 * `DSANet` 
@@ -65,6 +66,9 @@ The code is based on a [PyTorch implementation](https://github.com/Seanny123/da-
 
 
 #### Network Structure
+
+![Model Structure Encoder](https://pic2.zhimg.com/80/v2-4e0c7c8fb419bb91a218d9a295b85fa9_1440w.jpg)
+> Encoder Structure. Image from Qin et. al., "Dual-Stage Attention-Based Recurrent Neural Network for Time Series Prediction", [ArXiv](https://arxiv.org/abs/1704.02971), 2017.
 
 The neural net consists of the following elements: The first part consists of an **encoder** made up of the following parts:
 * A `LSTM` encoder layer. Only the hidden state is used for the output of the network.
@@ -125,6 +129,9 @@ This "Long- and Short-term Time-series network" is based on the paper by [Lai et
 
 #### Network Structure
 
+![Model Structure](https://opringle.github.io/images/model_architecture.png)
+> Image from Lai et al, "Long- and Short-term Time-series network", [ArXiv](https://arxiv.org/abs/1703.07015) 2017.
+
 The neural net consists of the following elements:
 * A convolutional layer than operates on some window of the time series.
 * A `GRU` cell with `relu` activation function.
@@ -139,6 +146,9 @@ The example loads some sample data and fits an LSTnet to the input features.
 
 
 ### TPA-LSTM
+
+![Model Structure](https://miro.medium.com/max/1400/1*SjKMs_iTOJaKqx45fpYEDQ.png)
+> Image from Shih et. al., "Temporal Pattern Attention for Multivariate Time Series Forecasting", [ArXiv](https://arxiv.org/pdf/1809.04206v2.pdf), 2019.
 
 The Temporal Pattern Attention LSTM network is based on the paper "Temporal Pattern Attention for Multivariate Time
 Series Forecasting" by [Shih et. al.](https://arxiv.org/pdf/1809.04206v2.pdf). See also the corresponding [blog post](https://sdobber.github.io/FA_TPALSTM/).
