@@ -1,5 +1,6 @@
 # FluxArchitectures
 
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://sdobber.github.io/FluxArchitectures.jl/stable)
 [![Build Status](https://github.com/sdobber/FluxArchitectures.jl/workflows/CI/badge.svg)](https://github.com/sdobber/FluxArchitectures.jl/actions)
 [![Coverage](https://codecov.io/gh/sdobber/FluxArchitectures.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/sdobber/FluxArchitectures.jl)
 
