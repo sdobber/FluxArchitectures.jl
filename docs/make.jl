@@ -15,6 +15,14 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Exported Functions" => "functions.md",
+        "Models" =>
+                    ["DARNN" => "models/darnn.md",
+                     "DSANet" => "models/dsanet.md",
+                     "LSTnet" => "models/lstnet.md",
+                     "TPALSTM" => "models/tpalstm.md"],
+        "Datasets" => "datasets/datasets.md",
+        "Reference" => "reference.md",
     ],
 )
 

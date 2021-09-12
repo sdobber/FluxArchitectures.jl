@@ -12,7 +12,7 @@
 in the background. As opposed to `Recur`, it returns the both the hidden state and the
 cell state.
 
-See also: [`Recur`](@ref)
+See also: [`Flux.Recur`](@ref)
 """
 mutable struct HiddenRecur{T,S}
     cell::T
@@ -132,7 +132,7 @@ current hidden state. This structure combines functionality of `Recur` in that i
 recurrent neural network cell stateful, as well as `Seq` in that it feeds matrices of
 input features as elements of a time series.
 
-See also: [`Seq`](@ref), [Recur](@ref)
+See also: [`Seq`](@ref), [Flux.Recur](@ref)
 """
 mutable struct SeqSkip{T,P}
 	cell::T
