@@ -21,8 +21,7 @@ inputsize = size(input, 1)
 convlayersize = 2
 recurlayersize = 3
 skiplength = 120
-model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength,
-        init=Flux.zeros32, initW=Flux.zeros32) |> gpu
+model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength, init=Flux.zeros32, initW=Flux.zeros32) |> gpu
 
 function loss(x, y)
     Flux.reset!(model)
@@ -40,8 +39,7 @@ end
 
 @info "Start loss" loss = loss(input, target)
 @info "Starting training"
-Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20),
-            ADAM(0.01), cb=cb)
+Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20), ADAM(0.01), cb=cb)
 @info "Final loss" loss = loss(input, target)
 ```
 
@@ -69,8 +67,7 @@ inputsize = size(input, 1)
 convlayersize = 2
 recurlayersize = 3
 skiplength = 120
-model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength,
-        init=Flux.zeros32, initW=Flux.zeros32) |> gpu
+model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength, init=Flux.zeros32, initW=Flux.zeros32) |> gpu
 ```
 
 As the loss function, we use the standard mean squared error loss. To make sure to reset the hidden state for each training loop, we call `Flux.reset!` every time we calculate the loss.
@@ -106,3 +103,64 @@ Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20),
             ADAM(0.01), cb=cb)
 @info "Final loss" loss = loss(input, target)
 ```
+
+
+## DARNN
+
+Use the following settings as as starting point:
+```julia
+poollength = 10
+horizon = 6
+datalength = 500
+input, target = get_data(:solar, poollength, datalength, horizon) |> gpu
+
+inputsize = size(input, 1)
+encodersize = 10
+decodersize = 10
+
+model = DARNN(inputsize, encodersize, decodersize, poollength, 1) |> gpu
+```
+and train with `ADAM(0.007)` as optimizer.
+
+
+## DSANet
+
+`DSANet` suffers from some numerical instabilities - it can be advisable to try initializing the model with different random seeds. The following settings give an example.
+```julia
+poollength = 10
+horizon = 6
+datalength = 4000
+input, target = get_data(:exchange_rate, poollength, datalength, horizon) |> gpu
+
+inputsize = size(input, 1)
+local_length = 3
+n_kernels = 3
+d_model = 4
+hiddensize = 1
+n_layers = 3
+n_head = 2
+
+Random.seed!(123)
+model = DSANet(inputsize, poollength, local_length, n_kernels, d_model, hiddensize, n_layers, n_head) |> gpu
+```
+Use `ADAM(0.005)` as optimizer.
+
+
+## TPALSTM
+
+Use the following settings on the example data:
+```julia
+poollength = 10
+horizon = 6
+datalength = 2000
+input, target = get_data(:solar, poollength, datalength, horizon) |> gpu
+
+inputsize = size(input, 1)
+hiddensize = 10
+layers = 2
+filternum = 32
+filtersize = 1
+
+model = TPALSTM(inputsize, hiddensize, poollength, layers, filternum, filtersize) |> gpu
+```
+Train with `ADAM(0.02)`.
