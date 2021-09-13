@@ -105,7 +105,7 @@ Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20),
 ```
 
 
-## DARNN
+## DARNN Example
 
 Use the following settings as as starting point:
 ```julia
@@ -123,7 +123,7 @@ model = DARNN(inputsize, encodersize, decodersize, poollength, 1) |> gpu
 and train with `ADAM(0.007)` as optimizer.
 
 
-## DSANet
+## DSANet Example
 
 `DSANet` suffers from some numerical instabilities - it can be advisable to try initializing the model with different random seeds. The following settings give an example.
 ```julia
@@ -146,7 +146,7 @@ model = DSANet(inputsize, poollength, local_length, n_kernels, d_model, hiddensi
 Use `ADAM(0.005)` as optimizer.
 
 
-## TPALSTM
+## TPALSTM Example
 
 Use the following settings on the example data:
 ```julia
