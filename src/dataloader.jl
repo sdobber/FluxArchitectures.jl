@@ -24,7 +24,7 @@ containing data in the form `timesteps x features` (i.e. each column contains th
 for one feature). `poollength` defines the number of timesteps to pool when preparing a 
 single frame of data to be fed to the model. `datalength` determines the number of time steps
 included into the output, and `horizon` determines the number of time steps that should be 
-forecasted by the model.
+forecasted by the model. Outputs features and labels.
 """    
 function prepare_data(data, poollength, datalength, horizon; normalise=true)
     extendedlength = datalength + poollength

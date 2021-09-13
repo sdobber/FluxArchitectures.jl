@@ -22,6 +22,7 @@ makedocs(;
                      "LSTnet" => "models/lstnet.md",
                      "TPALSTM" => "models/tpalstm.md"],
         "Datasets" => "datasets/datasets.md",
+        "Examples" => "examples/examples.md",
         "Reference" => "reference.md",
     ],
 )

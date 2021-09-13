@@ -79,7 +79,7 @@ Flux.@functor DARNNCell
 """
     DARNN(inp, encodersize, decodersize, poollength, orig_idx)
 
-Creates a DA-RNN layer based on the architecture described in
+Create a DA-RNN layer based on the architecture described in
 [Qin et. al.](https://arxiv.org/abs/1704.02971), as implemented for PyTorch
 [here](https://github.com/Seanny123/da-rnn/blob/master/modules.py). `inp` specifies the
 number of input features. `encodersize` defines the number of LSTM encoder layers, and
