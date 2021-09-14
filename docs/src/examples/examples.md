@@ -104,6 +104,8 @@ Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20),
 @info "Final loss" loss = loss(input, target)
 ```
 
+![LSTnetTrainingExample](https://user-images.githubusercontent.com/40642560/133287659-f67a9537-3afa-491a-aaec-c04b24706a8a.gif)
+
 
 ## DARNN Example
 

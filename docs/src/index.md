@@ -9,7 +9,7 @@ Documentation for [FluxArchitectures](https://github.com/sdobber/FluxArchitectur
 
 ## Installation
 
-Download [Julia 1.6](http://www.julialang.org) or later, if you haven't already. You can add FluxArchitectures from using Julia's package manager, by typing 
+Download [Julia 1.6](http://www.julialang.org) or later, if you haven't already. You can add FluxArchitectures from  Julia's package manager, by typing 
 ```
 ] add FluxArchitectures
 ``` 
