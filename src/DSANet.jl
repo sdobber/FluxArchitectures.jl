@@ -13,16 +13,16 @@ is given by `temperature`. Outputs
 ``\\mathrm{softmax}\\left( \\frac{q \\cdot k^T}{\\mathrm{temperature}} \\right)\\cdot v``.
 """
 function Scaled_Dot_Product_Attention(q, k, v, temperature, attn_dropout=0.1)
-    #attn1 = NNlib.batched_mul(q, Flux.batched_transpose(k)) / temperature
-	attn1 = NNlib.batched_mul(q, permutedims(k,[2,1,3])) / temperature
+    # attn1 = NNlib.batched_mul(q, Flux.batched_transpose(k)) / temperature
+	attn1 = NNlib.batched_mul(q, permutedims(k, [2,1,3])) / temperature
 	attn2 = Flux.softmax(attn1, dims=2)
     attn3 = Dropout(attn_dropout)(attn2)
-    return NNlib.batched_mul(attn3,v)
+    return NNlib.batched_mul(attn3, v)
 end
 
 function regularized_normalise(x::AbstractArray; dims=1)
-  μ′ = Flux.mean(x, dims = dims)
-  σ′ = Flux.std(x, dims = dims, mean = μ′, corrected=false)
+  μ′ = Flux.mean(x, dims=dims)
+  σ′ = Flux.std(x, dims=dims, mean=μ′, corrected=false)
   ϵ = sqrt(eps(Float32))
   return (x .- μ′) ./ (σ′ .+ ϵ)
 end
@@ -52,7 +52,7 @@ end
 
 
 # Encoder structure
-mutable struct SelfAttn_EncoderCell{A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P}
+mutable struct SelfAttn_EncoderCell{A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P}
     # General
     dropout::A
     # Multi head attention
@@ -85,7 +85,7 @@ Flux.trainable(m::SelfAttn_EncoderCell) = (m.layer_norm, m.mha_w_qs, m.mha_w_ks,
 Encoder part for the self attention networks that comprise the `DSANet`. For parameters see
 [DSANet](@ref).
 """
-function SelfAttn_Encoder(inp, d_model, n_head, d_hid, drop_prob = 0.1f0, σ = Flux.relu)
+function SelfAttn_Encoder(inp, d_model, n_head, d_hid, drop_prob=0.1f0, σ=Flux.relu)
     (d_model % n_head == 0) || throw(ArgumentError("d_model = $d_model must be divisible by n_head = $n_head"))
 
     d_k = d_model ÷ n_head
@@ -95,7 +95,7 @@ function SelfAttn_Encoder(inp, d_model, n_head, d_hid, drop_prob = 0.1f0, σ = F
     mha_w_qs = Dense(d_model, n_head * d_k)
     mha_w_ks = Dense(d_model, n_head * d_k)
     mha_w_vs = Dense(d_model, n_head * d_v)
-    mha_fc = Dense(n_head*d_v, d_model)
+    mha_fc = Dense(n_head * d_v, d_model)
     layer_norm = Reg_LayerNorm(d_model)
     # Positionwise Feedforward
     pwff_w_1 = Conv((1,), d_model => d_hid)
@@ -121,31 +121,31 @@ function (m::SelfAttn_EncoderCell)(src_seq)
     q = k = v = src_seq
     mha_residual = q
     q1 = reshape(q, (m.d_model, :))
-    q2 = reshape(m.mha_w_qs(q1), (m.n_head, m.d_k, :) )
+    q2 = reshape(m.mha_w_qs(q1), (m.n_head, m.d_k, :))
 	k1 = reshape(k, (m.d_model, :))
-	k2 = reshape(m.mha_w_ks(k1), (m.n_head, m.d_k,:) )
+	k2 = reshape(m.mha_w_ks(k1), (m.n_head, m.d_k, :))
 	v1 = reshape(v, (m.d_model, :))
-	v2 = reshape(m.mha_w_ks(v1), (m.n_head, m.d_v,:) )
+	v2 = reshape(m.mha_w_ks(v1), (m.n_head, m.d_v, :))
 
-    q3 = permutedims(q2,[1,3,2])
-    k3 = permutedims(k2,[1,3,2])
-    v3 = permutedims(v2,[1,3,2])
+    q3 = permutedims(q2, [1,3,2])
+    k3 = permutedims(k2, [1,3,2])
+    v3 = permutedims(v2, [1,3,2])
 
     output1 = Scaled_Dot_Product_Attention(q3, k3, v3, sqrt(Float32(m.d_k)))
 	output2 = permutedims(output1, [1,3,2])
     output3 = reshape(output2, (m.d_model, :))
     output4 = m.mha_fc(output3)
-    output5 = reshape(output4,(m.d_model, m.inp,:))
+    output5 = reshape(output4, (m.d_model, m.inp, :))
     output6 = m.dropout(output5)
 	# this line crashes the training by creating NaNs in the Conv layer parameters
 	# output7 = m.layer_norm(output6 .+ mha_residual)
 
     # Positionwise feedforward
     pwff_residual = output6 .+ mha_residual  # output7
-    #output1 = Flux.batched_transpose(pwff_residual)
+    # output1 = Flux.batched_transpose(pwff_residual)
 	output1 = permutedims(pwff_residual, [2,1,3])
     output2 = σ.(m.pwff_w_1(output1))
-    #output3 = Flux.batched_transpose(m.pwff_w_2(output2))
+    # output3 = Flux.batched_transpose(m.pwff_w_2(output2))
 	output3 = permutedims(m.pwff_w_2(output2), [2,1,3])
     output4 = m.dropout(output3)
     output5 = m.pwff_layer_norm(output4 .+ pwff_residual)
@@ -154,7 +154,7 @@ end
 
 
 # Global Self Attention
-mutable struct Global_SelfAttn_Cell{A, B, C, D, E, F, G, H, I, J}
+mutable struct Global_SelfAttn_Cell{A,B,C,D,E,F,G,H,I,J}
     conv::A
     dropout::B
     in_linear::C
@@ -178,13 +178,13 @@ Flux.trainable(m::Global_SelfAttn_Cell) = (m.conv, m.in_linear, m.out_linear,
 Global self attention module for `DSANet`. For parameters see [DSANet](@ref).
 """
 function Global_SelfAttn(inp, window, n_kernels, w_kernel, d_model, d_hid,
-                n_layers, n_head, drop_prob = 0.1f0, σ = Flux.relu)
+                n_layers, n_head, drop_prob=0.1f0, σ=Flux.relu)
 
     conv = Conv((w_kernel, window), 1 => n_kernels)
     dropout = Dropout(drop_prob)
     in_linear = Dense(n_kernels, d_model)
     out_linear = Dense(d_model, n_kernels)
-    encoder_chain = Chain([SelfAttn_Encoder(inp, d_model, n_head, d_hid, drop_prob, σ) for i=1:n_layers]...)
+    encoder_chain = Chain([SelfAttn_Encoder(inp, d_model, n_head, d_hid, drop_prob, σ) for i = 1:n_layers]...)
     return Global_SelfAttn_Cell(conv, dropout, in_linear, out_linear, encoder_chain,
                 inp, d_model, n_kernels, window, σ)
 end
@@ -193,7 +193,7 @@ function Base.show(io::IO, m::Global_SelfAttn_Cell)
 	print(io, "Global_SelfAttn(", m.inp)
 	print(io, ", ", m.window)
 	print(io, ", ", m.n_kernels)
-	print(io, ", ", size(m.conv.weight,1))
+	print(io, ", ", size(m.conv.weight, 1))
 	print(io, ", ", m.d_model)
 	print(io, ", ", m.encoder_chain[1].d_hid)
 	print(io, ", ", length(m.encoder_chain))
@@ -207,21 +207,21 @@ function (m::Global_SelfAttn_Cell)(x)
 	x1 = m.conv(x)
     x2 = m.dropout(m.σ.(x1))
     x3 = dropdims(x2;dims=2)
-    #x4 = Flux.batched_transpose(x3)
+    # x4 = Flux.batched_transpose(x3)
 	x4 = permutedims(x3, [2,1,3])
     x5 = reshape(x4, (m.n_kernels, :))
     x6 = m.in_linear(x5)
-    src_seq = reshape(x6, (m.d_model,m.inp,:))
+    src_seq = reshape(x6, (m.d_model, m.inp, :))
     x8 = m.encoder_chain(src_seq)
     x9 = reshape(x8, (m.d_model, :))
     x10 = m.out_linear(x9)
-    x11 = reshape(x10, (m.n_kernels, m.inp,:))
+    x11 = reshape(x10, (m.n_kernels, m.inp, :))
     return x11
 end
 
 
 # Local Self Attention
-mutable struct Local_SelfAttn_Cell{A, B, C, D, E, F, G, H, I, J, K}
+mutable struct Local_SelfAttn_Cell{A,B,C,D,E,F,G,H,I,J,K}
     conv::A
     dropout::B
     in_linear::C
@@ -246,13 +246,13 @@ Flux.trainable(m::Local_SelfAttn_Cell) = (m.conv, m.in_linear, m.out_linear,
 Local self attention module for `DSANet`. For parameters see [DSANet](@ref).
 """
 function Local_SelfAttn(inp, window, local_length, n_kernels, w_kernel, d_model, d_hid,
-                n_layers, n_head, drop_prob = 0.1f0, σ = Flux.relu)
+                n_layers, n_head, drop_prob=0.1f0, σ=Flux.relu)
 
     conv = Conv((w_kernel, local_length), 1 => n_kernels)
     dropout = Dropout(drop_prob)
     in_linear = Dense(n_kernels, d_model)
     out_linear = Dense(d_model, n_kernels)
-    encoder_chain = Chain([SelfAttn_Encoder(inp, d_model, n_head, d_hid, drop_prob, σ) for i=1:n_layers]...)
+    encoder_chain = Chain([SelfAttn_Encoder(inp, d_model, n_head, d_hid, drop_prob, σ) for i = 1:n_layers]...)
     return Local_SelfAttn_Cell(conv, dropout, in_linear, out_linear, encoder_chain,
                 inp, d_model, n_kernels, window, local_length, σ)
 end
@@ -262,7 +262,7 @@ function Base.show(io::IO, m::Local_SelfAttn_Cell)
 	print(io, ", ", m.window)
 	print(io, ", ", m.local_length)
 	print(io, ", ", m.n_kernels)
-	print(io, ", ", size(m.conv.weight,1))
+	print(io, ", ", size(m.conv.weight, 1))
 	print(io, ", ", m.d_model)
 	print(io, ", ", m.encoder_chain[1].d_hid)
 	print(io, ", ", length(m.encoder_chain))
@@ -274,22 +274,22 @@ end
 
 function (m::Local_SelfAttn_Cell)(x)
 	x1 = m.σ.(m.conv(x))
-    x2 = MaxPool((1,m.window-m.local_length+1))(x1)
+    x2 = MaxPool((1, m.window - m.local_length + 1))(x1)
     x3 = m.dropout(x2)
-    #x4 = Flux.batched_transpose(dropdims(x3, dims=(2)))
+    # x4 = Flux.batched_transpose(dropdims(x3, dims=(2)))
 	x4 = permutedims(dropdims(x3, dims=(2)), [2,1,3])
     x5 = reshape(x4, (m.n_kernels, :))
-    src_seq = reshape(m.in_linear(x5),(m.d_model, m.inp, :))
+    src_seq = reshape(m.in_linear(x5), (m.d_model, m.inp, :))
     x6 = m.encoder_chain(src_seq)
     x7 = reshape(x6, (m.d_model, :))
     x8 = m.out_linear(x7)
-    x9 = reshape(x8, (m.n_kernels, m.inp,:))
+    x9 = reshape(x8, (m.n_kernels, m.inp, :))
     return x9
 end
 
 
 # Full DSANet
-mutable struct DSANetCell{A, B, C, D, E, F, G, H, I, J}
+mutable struct DSANetCell{A,B,C,D,E,F,G,H,I,J}
     gsa::A
     lsa::B
     AR_linear::C
@@ -309,7 +309,7 @@ Flux.trainable(m::DSANetCell) = (m.gsa, m.lsa, m.AR_linear, m.output, m.final_ou
 """
     DSANet(inp, window, local_length, n_kernels, d_model, d_hid, n_layers, n_head, out=1, drop_prob = 0.1f0, σ = Flux.relu)
 
-Creates a `DSANet` network based on the architecture described in
+Create a `DSANet` network based on the architecture described in
 [Siteng Huang et. al.](https://kyonhuang.top/publication/dual-self-attention-network). The
 code follows the [PyTorch implementation](https://github.com/bighuang624/DSANet).
 `inp` specifies the number of input features. `window` gives the length of the window
@@ -327,7 +327,7 @@ for 1000 data points containing 31 features that have been windowed over 6
 timesteps, `DSANet` expects an input size of `(31, 6, 1, 1000)`.
 """
 function DSANet(inp, window, local_length, n_kernels, d_model, d_hid,
-                n_layers, n_head, out=1, drop_prob = 0.1f0, σ = Flux.relu)
+                n_layers, n_head, out=1, drop_prob=0.1f0, σ=Flux.relu)
     out <= inp || throw(ArgumentError("Number of inputs ($inp) needs to be larger or equal to outputs ($out) "))
 	w_kernel = 1
 	gsa = Global_SelfAttn(inp, window, n_kernels, w_kernel, d_model, d_hid,
@@ -335,7 +335,7 @@ function DSANet(inp, window, local_length, n_kernels, d_model, d_hid,
     lsa = Local_SelfAttn(inp, window, local_length, n_kernels, w_kernel, d_model, d_hid,
                     n_layers, n_head, drop_prob, σ)
     AR_linear = Dense(window, 1)
-    output = Dense(2*n_kernels, 1, σ)
+    output = Dense(2 * n_kernels, 1, σ)
 	final_output = Dense(inp, out)
     dropout = Dropout(drop_prob)
     return DSANetCell(gsa, lsa, AR_linear, output, final_output, dropout, inp, n_kernels,
@@ -347,7 +347,7 @@ function Base.show(io::IO, m::DSANetCell)
 	print(io, ", ", m.window)
 	print(io, ", ", m.lsa.local_length)
 	print(io, ", ", m.lsa.n_kernels)
-	#print(io, ", ", size(m.lsa.conv.weight,1))  # w_kernel
+	# print(io, ", ", size(m.lsa.conv.weight,1))  # w_kernel
 	print(io, ", ", m.lsa.d_model)
 	print(io, ", ", m.lsa.encoder_chain[1].d_hid)
 	print(io, ", ", length(m.lsa.encoder_chain))
@@ -361,11 +361,11 @@ end
 function (m::DSANetCell)(x)
 	# Autoregressive Part
     x1 = dropdims(x, dims=3)
-    #x2 = Flux.batched_transpose(x1)
+    # x2 = Flux.batched_transpose(x1)
 	x2 = permutedims(x1, [2,1,3])
-    x3 = reshape(x2, (m.window,:))
+    x3 = reshape(x2, (m.window, :))
     x4 = m.AR_linear(x3)
-    ar_output = reshape(x4,(m.inp,:))
+    ar_output = reshape(x4, (m.inp, :))
 
     # Self Attention Modules
     gsa_output = m.gsa(x)
@@ -374,9 +374,9 @@ function (m::DSANetCell)(x)
     # Full Net
     sf_output = cat(gsa_output, lsa_output, dims=1)
     sf_output1 = m.dropout(sf_output)
-    sf_output2 = reshape(sf_output1, (2*m.n_kernels,:))
+    sf_output2 = reshape(sf_output1, (2 * m.n_kernels, :))
     sf_output3 = m.output(sf_output2)
-    sf_output4 = reshape(sf_output3, (m.inp,:))
+    sf_output4 = reshape(sf_output3, (m.inp, :))
 
     out = sf_output4 .+ ar_output
     return m.final_output(out)

@@ -22,7 +22,7 @@ end
 	TPALSTM(in, hiddensize, poollength)
 	TPALSTM(in, hiddensize, poollength, layers, filternum, filtersize)
 
-Creates a TPA-LSTM layer based on the architecture described in
+Create a TPA-LSTM layer based on the architecture described in
 [Shih et. al.](https://arxiv.org/pdf/1809.04206v2.pdf), as implemented for PyTorch by
 [Jing Wang](https://github.com/jingw2/demand_forecast/blob/master/tpa_lstm.py). `in`
 specifies the number of input features. `hiddensize` defines the input and output size of

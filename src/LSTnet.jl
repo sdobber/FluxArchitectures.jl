@@ -63,7 +63,7 @@ end
     LSTnet(in, convlayersize, recurlayersize, poolsize, skiplength)
     LSTnet(in, convlayersize, recurlayersize, poolsize, skiplength, Flux.relu)
 
-Creates a LSTnet layer based on the architecture described in
+Create a LSTnet layer based on the architecture described in
 [Lai et. al.](https://arxiv.org/abs/1703.07015). `in` specifies the number of
 input features. `convlayersize` defines the number of convolutional layers, and
 `recurlayersize` defines the number of recurrent layers. `poolsize` gives the
