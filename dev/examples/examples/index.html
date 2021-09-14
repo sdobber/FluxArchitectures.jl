@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · FluxArchitectures.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://sdobber.github.io/FluxArchitectures.jl/examples/examples/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">FluxArchitectures.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li class="is-active"><a class="tocitem" href>Examples</a><ul class="internal"><li><a class="tocitem" href="#LSTnet-Copy-Paste-Code"><span>LSTnet - Copy-Paste Code</span></a></li><li><a class="tocitem" href="#LSTnet-Step-by-step"><span>LSTnet - Step-by-step</span></a></li><li><a class="tocitem" href="#DARNN-Example"><span>DARNN Example</span></a></li><li><a class="tocitem" href="#DSANet-Example"><span>DSANet Example</span></a></li><li><a class="tocitem" href="#TPALSTM-Example"><span>TPALSTM Example</span></a></li></ul></li><li><a class="tocitem" href="../../datasets/datasets/">Datasets</a></li><li><a class="tocitem" href="../../functions/">Exported Functions</a></li><li><span class="tocitem">Models</span><ul><li><a class="tocitem" href="../../models/darnn/">DARNN</a></li><li><a class="tocitem" href="../../models/dsanet/">DSANet</a></li><li><a class="tocitem" href="../../models/lstnet/">LSTnet</a></li><li><a class="tocitem" href="../../models/tpalstm/">TPALSTM</a></li></ul></li><li><a class="tocitem" href="../../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Examples</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/sdobber/FluxArchitectures.jl/blob/master/docs/src/examples/examples.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Examples"><a class="docs-heading-anchor" href="#Examples">Examples</a><a id="Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Examples" title="Permalink"></a></h1><h2 id="LSTnet-Copy-Paste-Code"><a class="docs-heading-anchor" href="#LSTnet-Copy-Paste-Code">LSTnet - Copy-Paste Code</a><a id="LSTnet-Copy-Paste-Code-1"></a><a class="docs-heading-anchor-permalink" href="#LSTnet-Copy-Paste-Code" title="Permalink"></a></h2><p>If you want to start right away, make sure that <code>FluxArchitectures</code> and <code>Plots</code> are installed, and try the following. Details are below.</p><pre><code class="language-julia hljs">using FluxArchitectures, Plots
+
+@info &quot;Loading data&quot;
+poollength = 10
+horizon = 6
+datalength = 1000
+input, target = get_data(:exchange_rate, poollength, datalength, horizon) |&gt; gpu
+
+@info &quot;Creating model and loss&quot;
+inputsize = size(input, 1)
+convlayersize = 2
+recurlayersize = 3
+skiplength = 120
+model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength, init=Flux.zeros32, initW=Flux.zeros32) |&gt; gpu
+
+function loss(x, y)
+    Flux.reset!(model)
+    return Flux.mse(model(x), y&#39;)
+end
+
+cb = function ()
+    Flux.reset!(model)
+    pred = model(input)&#39; |&gt; cpu
+    Flux.reset!(model)
+    p1 = plot(pred, label=&quot;Predict&quot;)
+    p1 = plot!(cpu(target), label=&quot;Data&quot;, title=&quot;Loss $(loss(input, target))&quot;)
+    display(plot(p1))
+end
+
+@info &quot;Start loss&quot; loss = loss(input, target)
+@info &quot;Starting training&quot;
+Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20), ADAM(0.01), cb=cb)
+@info &quot;Final loss&quot; loss = loss(input, target)</code></pre><h2 id="LSTnet-Step-by-step"><a class="docs-heading-anchor" href="#LSTnet-Step-by-step">LSTnet - Step-by-step</a><a id="LSTnet-Step-by-step-1"></a><a class="docs-heading-anchor-permalink" href="#LSTnet-Step-by-step" title="Permalink"></a></h2><h3 id="Load-some-sample-data"><a class="docs-heading-anchor" href="#Load-some-sample-data">Load some sample data</a><a id="Load-some-sample-data-1"></a><a class="docs-heading-anchor-permalink" href="#Load-some-sample-data" title="Permalink"></a></h3><p>We start out by loading some of the example <a href="../../datasets/datasets/#Datasets">Datasets</a> - in this case the <code>:exchange_rate</code> dataset, a collection of daily exchange rates of eight foreign countries. To speed up training, we only take the first 1000 time steps from the data. We would like to feed the model with a window of 10 past timesteps while at the same time trying to forecast 6 timesteps in the future.</p><pre><code class="language-julia hljs">using FluxArchitectures, Plots
+
+poollength = 10
+horizon = 6
+datalength = 1000
+input, target = get_data(:exchange_rate, poollength, datalength, horizon) |&gt; gpu</code></pre><h3 id="Define-the-neural-net-and-loss"><a class="docs-heading-anchor" href="#Define-the-neural-net-and-loss">Define the neural net and loss</a><a id="Define-the-neural-net-and-loss-1"></a><a class="docs-heading-anchor-permalink" href="#Define-the-neural-net-and-loss" title="Permalink"></a></h3><p>We use a <code>LSTnet</code> model with 2 convolutional layers, and 3 recurrent layers. For the recurrent-skip component, we use a hidden state 120 time steps from the past.</p><pre><code class="language-julia hljs">inputsize = size(input, 1)
+convlayersize = 2
+recurlayersize = 3
+skiplength = 120
+model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength, init=Flux.zeros32, initW=Flux.zeros32) |&gt; gpu</code></pre><p>As the loss function, we use the standard mean squared error loss. To make sure to reset the hidden state for each training loop, we call <code>Flux.reset!</code> every time we calculate the loss.</p><pre><code class="language-julia hljs">function loss(x, y)
+    Flux.reset!(model)
+    return Flux.mse(model(x), y&#39;)
+end</code></pre><h3 id="Callback-for-plotting-the-training"><a class="docs-heading-anchor" href="#Callback-for-plotting-the-training">Callback for plotting the training</a><a id="Callback-for-plotting-the-training-1"></a><a class="docs-heading-anchor-permalink" href="#Callback-for-plotting-the-training" title="Permalink"></a></h3><p>To observe the training progress, we define the following function to plot the training data and prediction together with the current loss value.</p><pre><code class="language-julia hljs">cb = function ()
+    Flux.reset!(model)
+    pred = model(input)&#39; |&gt; cpu
+    Flux.reset!(model)
+    p1 = plot(pred, label=&quot;Predict&quot;)
+    p1 = plot!(cpu(target), label=&quot;Data&quot;, title=&quot;Loss $(loss(input, target))&quot;)
+    display(plot(p1))
+end</code></pre><h3 id="Training-loop"><a class="docs-heading-anchor" href="#Training-loop">Training loop</a><a id="Training-loop-1"></a><a class="docs-heading-anchor-permalink" href="#Training-loop" title="Permalink"></a></h3><p>Finally, we start the training loop and train for 20 epochs.</p><pre><code class="language-julia hljs">@info &quot;Start loss&quot; loss = loss(input, target)
+@info &quot;Starting training&quot;
+Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20),
+            ADAM(0.01), cb=cb)
+@info &quot;Final loss&quot; loss = loss(input, target)</code></pre><p><img src="https://user-images.githubusercontent.com/40642560/133287659-f67a9537-3afa-491a-aaec-c04b24706a8a.gif" alt="LSTnetTrainingExample"/></p><h2 id="DARNN-Example"><a class="docs-heading-anchor" href="#DARNN-Example">DARNN Example</a><a id="DARNN-Example-1"></a><a class="docs-heading-anchor-permalink" href="#DARNN-Example" title="Permalink"></a></h2><p>Use the following settings as as starting point:</p><pre><code class="language-julia hljs">poollength = 10
+horizon = 6
+datalength = 500
+input, target = get_data(:solar, poollength, datalength, horizon) |&gt; gpu
+
+inputsize = size(input, 1)
+encodersize = 10
+decodersize = 10
+
+model = DARNN(inputsize, encodersize, decodersize, poollength, 1) |&gt; gpu</code></pre><p>and train with <code>ADAM(0.007)</code> as optimizer.</p><h2 id="DSANet-Example"><a class="docs-heading-anchor" href="#DSANet-Example">DSANet Example</a><a id="DSANet-Example-1"></a><a class="docs-heading-anchor-permalink" href="#DSANet-Example" title="Permalink"></a></h2><p><code>DSANet</code> suffers from some numerical instabilities - it can be advisable to try initializing the model with different random seeds. The following settings give an example.</p><pre><code class="language-julia hljs">poollength = 10
+horizon = 6
+datalength = 4000
+input, target = get_data(:exchange_rate, poollength, datalength, horizon) |&gt; gpu
+
+inputsize = size(input, 1)
+local_length = 3
+n_kernels = 3
+d_model = 4
+hiddensize = 1
+n_layers = 3
+n_head = 2
+
+Random.seed!(123)
+model = DSANet(inputsize, poollength, local_length, n_kernels, d_model, hiddensize, n_layers, n_head) |&gt; gpu</code></pre><p>Use <code>ADAM(0.005)</code> as optimizer.</p><h2 id="TPALSTM-Example"><a class="docs-heading-anchor" href="#TPALSTM-Example">TPALSTM Example</a><a id="TPALSTM-Example-1"></a><a class="docs-heading-anchor-permalink" href="#TPALSTM-Example" title="Permalink"></a></h2><p>Use the following settings on the example data:</p><pre><code class="language-julia hljs">poollength = 10
+horizon = 6
+datalength = 2000
+input, target = get_data(:solar, poollength, datalength, horizon) |&gt; gpu
+
+inputsize = size(input, 1)
+hiddensize = 10
+layers = 2
+filternum = 32
+filtersize = 1
+
+model = TPALSTM(inputsize, hiddensize, poollength, layers, filternum, filtersize) |&gt; gpu</code></pre><p>Train with <code>ADAM(0.02)</code>.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../../datasets/datasets/">Datasets »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.6 on <span class="colophon-date" title="Tuesday 14 September 2021 17:55">Tuesday 14 September 2021</span>. Using Julia version 1.6.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
