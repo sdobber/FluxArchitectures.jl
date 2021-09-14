@@ -12,9 +12,9 @@ This package contains a loose collection of (slightly) more advanced neural netw
 
 ## Installation
 
-FluxArchitectures is *not* a registered package. To install, type `]` to activate the package manager, and use
+To install FluxArchitectures, type `]` to activate the package manager, and type
 ```julia
-dev https://github.com/sdobber/FluxArchitectures.jl
+add FluxArchitectures
 ```
 for installation. After `using FluxArchitectures`, the following functions are exported:
 * `prepare_data`
@@ -24,7 +24,7 @@ for installation. After `using FluxArchitectures`, the following functions are e
 * `LSTnet`
 * `TPALSTM`
 
-See their docstrings and the `examples` folder for details.
+See their docstrings, the [documentation]((https://sdobber.github.io/FluxArchitectures.jl/stable)), and the `examples` folder for details.
 
 
 ## Models
