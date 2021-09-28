@@ -27,14 +27,12 @@ included into the output, and `horizon` determines the number of time steps that
 forecasted by the model. Outputs features and labels.
 """    
 function prepare_data(data, poollength, datalength, horizon; normalise=true)
-    extendedlength = datalength + poollength
-    extendedlength > size(data, 1) && throw(ArgumentError("datalength $(datalength) larger than available data $(size(data, 1) - poollength)"))
+    extendedlength = datalength + poollength - 1
+    extendedlength > size(data, 1) && throw(ArgumentError("datalength $(datalength) larger than available data $(size(data, 1) - poollength + 1)"))
     (normalise == true) && (data = Flux.normalise(data, dims=1))
     features = similar(data, size(data, 2), poollength, 1, datalength)
-    for i = 0:poollength - 1
-        for j = poollength:datalength
-            features[:,i + 1,1,j] = data[j - i,:]
-        end
+    for i in 1:datalength
+      features[:,:,:,i] .= permutedims(data[i:(i + poollength - 1) ,:])
     end
     labels = circshift(data[1:datalength,1], -horizon)
     return features, labels
