@@ -26,3 +26,11 @@ end
     @test all(target .== 1.0)
 end
 
+@testset "Tables.jl interface" begin
+    poollength = 10
+    horizon = 6
+    datalength = 500
+    inp = FluxArchitectures.load_data(:solar) |> FluxArchitectures.Tables.table
+    @test prepare_data(inp, poollength, datalength, horizon) == get_data(:solar, poollength, datalength, horizon)
+end
+
