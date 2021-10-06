@@ -5,7 +5,7 @@
     x = rand(Float32, inputsize, poollength, 1, datalength)
     m = LSTnet(inputsize, 2, 3, poollength, 20)
     @test size(m(x)) == (1, datalength)
-    if Flux.use_cuda[]
+    if Flux.CUDA.functional()
         @test size(gpu(m)(gpu(x))) == (1, datalength)
     end
     FluxArchitectures.initialize_bias!(m)
@@ -19,7 +19,7 @@ end
     x = rand(Float32, inputsize, datalength)
     m = FluxArchitectures.ReluGRU(inputsize, 10)
     @test size(m(x)) == (10, datalength)
-    if Flux.use_cuda[]
+    if Flux.CUDA.functional()
         @test size(gpu(m)(gpu(x))) == (10, datalength)
     end
 end
