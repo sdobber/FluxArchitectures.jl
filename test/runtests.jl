@@ -1,7 +1,7 @@
 using FluxArchitectures
 using Test
 
-if Flux.use_cuda[]
+if Flux.CUDA.functional()
     @info "Testing GPU support"
 else
     @warn "CUDA unavailable, not testing GPU support"

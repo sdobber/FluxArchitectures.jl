@@ -19,14 +19,14 @@ get_data(dataset, poollength, datalength, horizon; normalise=true) =
     prepare_data(data, poollength, datalength, horizon)
     prepare_data(data, poollength, datalength, horizon; normalise=true)
 
-Cast 2D time series data into the format used by FluxArchitectures. `data` is a matrix 
-containing data in the form `timesteps x features` (i.e. each column contains the time series
-for one feature). `poollength` defines the number of timesteps to pool when preparing a 
-single frame of data to be fed to the model. `datalength` determines the number of time steps
-included into the output, and `horizon` determines the number of time steps that should be 
-forecasted by the model. Outputs features and labels.
+Cast 2D time series data into the format used by FluxArchitectures. `data` is a matrix or 
+Tables.jl compatible datasource containing data in the form `timesteps x features` (i.e.
+each column contains the time series for one feature). `poollength` defines the number of 
+timesteps to pool when preparing a single frame of data to be fed to the model. `datalength` 
+determines the number of time steps included into the output, and `horizon` determines the 
+number of time steps that should be forecasted by the model. Outputs features and labels.
 """    
-function prepare_data(data, poollength, datalength, horizon; normalise=true)
+function prepare_data(data::AbstractMatrix, poollength, datalength, horizon; normalise=true)
     extendedlength = datalength + poollength - 1
     extendedlength > size(data, 1) && throw(ArgumentError("datalength $(datalength) larger than available data $(size(data, 1) - poollength + 1)"))
     (normalise == true) && (data = Flux.normalise(data, dims=1))
@@ -37,6 +37,8 @@ function prepare_data(data, poollength, datalength, horizon; normalise=true)
     labels = circshift(data[1:datalength,1], -horizon)
     return features, labels
 end
+
+prepare_data(data, poollength, datalength, horizon; normalise=true) = prepare_data(Tables.matrix(data), poollength, datalength, horizon; normalise=true)
 
 
 """

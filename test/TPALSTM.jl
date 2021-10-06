@@ -5,7 +5,7 @@
     x = rand(Float32, inputsize, poollength, 1, datalength)
     m = TPALSTM(inputsize, 10, poollength, 2, 32, 1)
     @test size(m(x)) == (1, datalength)
-    if Flux.use_cuda[]
+    if Flux.CUDA.functional()
         @test size(gpu(m)(gpu(x))) == (1, datalength)
     end
     FluxArchitectures.initialize_bias!(m)

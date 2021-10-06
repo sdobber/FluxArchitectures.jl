@@ -6,7 +6,7 @@ CurrentModule = FluxArchitectures
 
 ## Data Preparation
 
-When raw data is available in matrix format, then the following function allows for easy conversion and cropping to the format expected by the models. 
+When raw data is available in matrix format, then `prepare_data` allows for easy conversion and cropping to the format expected by the models. It also accepts inputs compatible to the Tables.jl interface, for example a `DataFrame` or `CSV.File`.
 ```@docs
 prepare_data
 ```
