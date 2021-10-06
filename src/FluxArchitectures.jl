@@ -10,6 +10,8 @@ using JuliennedArrays
 using SliceMap
 using LazyArtifacts
 
+import Tables
+
 include("./shared/StackedLSTM.jl")
 include("./shared/Sequentialize.jl")
 include("dataloader.jl")
