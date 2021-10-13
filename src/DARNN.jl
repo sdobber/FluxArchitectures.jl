@@ -138,20 +138,19 @@ function _encoder(m::DARNNCell, input_data, slice)
 	return m.encoder_lstm.state[1]
 end
 
-function darnn_encoder(m::DARNNCell, input_data::Array)
-	sl = Slices(input_data, True(), False(), True())
-	fun = s -> _encoder(m, input_data, s)
-	return Align(map(fun, sl), True(), False(), True())
+function darnn_encoder(m::DARNNCell, input_data::AbstractArray)
+	arr = [Flux.unsqueeze(_encoder(m, input_data, input_data[:,t,:]), 2) for t = 1:m.poollength]
+	return cat(arr...; dims=2)
 end
 
-function darnn_encoder(m::DARNNCell, input_data::Flux.CUDA.CuArray)
-	input_encoded = Flux.Zygote.Buffer(input_data, m.encodersize, m.poollength,
-	 				size(input_data, 3))
-	@inbounds for t in 1:m.poollength
-	      input_encoded[:,t,:] = Flux.unsqueeze(_encoder(m, input_data, input_data[:,t,:]), 2)
-	end
-	return copy(input_encoded)
-end
+# function darnn_encoder(m::DARNNCell, input_data::Flux.CUDA.CuArray)
+# 	input_encoded = Flux.Zygote.Buffer(input_data, m.encodersize, m.poollength,
+# 	 				size(input_data, 3))
+# 	@inbounds for t in 1:m.poollength
+# 	      input_encoded[:,t,:] = Flux.unsqueeze(_encoder(m, input_data, input_data[:,t,:]), 2)
+# 	end
+# 	return copy(input_encoded)
+# end
 
 function darnn_decoder(m::DARNNCell, input_encoded, input_data)
 	context = Flux.zeros32(m.encodersize, size(input_data, 3))
