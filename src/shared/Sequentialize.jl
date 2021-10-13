@@ -58,7 +58,7 @@ _remove_dims(x::AbstractArray{T,3}) where T = dropdims(x; dims=2)
 
 Seq(chain) = Seq(chain, [0.0f0])
 (l::Seq)(x) = l(l.chain.state, l.chain, x)
-# getbuffersize(chain, x) = getbuffersize(typeof(chain), chain.state, x)
+getbuffersize(chain, x) = getbuffersize(typeof(chain), chain.state, x)
 
 # CPU Arrays
 function (l::Seq)(::AbstractArray, _, x)

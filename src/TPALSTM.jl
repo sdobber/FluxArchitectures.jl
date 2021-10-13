@@ -79,17 +79,8 @@ function _TPALSTM_attention(H, h_last, m::TPALSTMCell)
 end
 
 # Get the pooled hidden state from feeding it to the LSTM cell
-# TO DO: Get rid of Zygote.Buffer for speeding things up
 function _TPALSTM_gethidden(inp, m::TPALSTMCell)
-    batchsize = size(inp, 3)
-    H = Flux.Zygote.Buffer(inp, m.hiddensize, m.poollength - 1, batchsize)  # needs to be off GPU
-    @inbounds for t in 1:m.poollength - 1
-        x = inp[:,t,:]
-        xconcat = m.embedding(x)
-        hiddenstate = m.lstm(xconcat)
-        H[:,t,:] = hiddenstate
-    end
-    return copy(H)
+    return cat([_add_dims(m.lstm(m.embedding(inp[:,t,:]))) for t in 1:m.poollength - 1]...; dims=2)
 end
 
 # Model output

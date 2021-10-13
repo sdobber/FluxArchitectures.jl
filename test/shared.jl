@@ -1,8 +1,8 @@
 @testset "StackedLSTM" begin
-    x = rand(Float32, 20)
+    x = rand(Float32, 20, 1, 1)
     for m in (FluxArchitectures.StackedLSTM(20, 10, 3, 1), FluxArchitectures.StackedLSTM(20, 10, 3, 2),
         FluxArchitectures.StackedLSTM(20, 10, 3, 5))
-        @test size(m(x)) == (10,)
+        @test size(m(x)) == (10, 1, 1)
     end
     @test repr(FluxArchitectures.StackedLSTM(20, 10, 3, 1)) == "Recur(LSTMCell(20, 10))"
     @test repr(FluxArchitectures.StackedLSTM(20, 10, 3, 2)) == "StackedLSTM(20, 10, 3, 2)"
