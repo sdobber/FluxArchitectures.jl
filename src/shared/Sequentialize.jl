@@ -34,6 +34,12 @@ Base.show(io::IO, m::HiddenRecur) = print(io, "HiddenRecur(", m.cell, ")")
 Flux.reset!(m::HiddenRecur) = (m.state = m.cell.state0)
 Flux.trainable(m::HiddenRecur) = (m.cell,)
 
+function (m::HiddenRecur)(x::AbstractArray{T,3}) where T
+	h = [m(view(x, :, :, i)) for i in 1:size(x, 3)]
+	sze = size(h[1][1])
+	return [reshape(reduce(hcat, [h[j][i] for j = 1:length(h)]), sze[1], sze[2], length(h)) for i = 1:length(h[1])]
+end
+
 
 """
     Seq(RNN)
@@ -47,65 +53,67 @@ mutable struct Seq{T}
     state
 end
 
+_add_dims(x::AbstractArray{T,2}) where T = reshape(x, size(x, 1), 1, size(x, 2))
+_remove_dims(x::AbstractArray{T,3}) where T = dropdims(x; dims=2)
+
 Seq(chain) = Seq(chain, [0.0f0])
 (l::Seq)(x) = l(l.chain.state, l.chain, x)
-getbuffersize(chain, x) = getbuffersize(typeof(chain), chain.state, x)
+# getbuffersize(chain, x) = getbuffersize(typeof(chain), chain.state, x)
 
 # CPU Arrays
-function (l::Seq)(::Array, _, x)
-	l.state = Align(map(l.chain, Slices(x, True(), False())), 1)
+function (l::Seq)(::AbstractArray, _, x)
+	l.state = _add_dims(x) |> l.chain |> _remove_dims
 	return l.state
 end
-function (l::Seq)(::Array, ::Flux.Recur, x)
-	l.state = Align(map(l.chain, Slices(x, True(), False())), 1)
+function (l::Seq)(::AbstractArray, ::Flux.Recur, x)
+	l.state = _add_dims(x) |> l.chain |> _remove_dims
 	return l.state
 end
 function (l::Seq)(::Tuple, ::Flux.Recur, x)
-	l.state = Align(map(l.chain, Slices(x, True(), False())), 1)
+	l.state = _add_dims(x) |> l.chain |> _remove_dims
 	return l.state
 end
 function (l::Seq)(::Tuple, _, x)
-	tuples = map(l.chain, Slices(x, True(), False()))
-	l.state = [Align(map(x -> dropdims(x[i], dims=2), tuples), 1) for i in 1:length(l.chain.state)]
+	l.state = _remove_dims.(l.chain(_add_dims(x)))
 	return l.state
 end
 
-# GPU Arrays
-getbuffersize(::Type{<:Union{Flux.Recur,StackedLSTMCell}},
- 				state::AbstractArray, x) = ((length(state), size(x, 2)), 1)
-getbuffersize(::Type{<:Union{Flux.Recur,StackedLSTMCell}},
-				state::Tuple, x) = ((length(state[1]), size(x, 2)), 1)
-getbuffersize(::Type{<:Union{HiddenRecur}},
-				state::Tuple, x) = ((length(state[1]), size(x, 2)), length(state))
+# # GPU Arrays
+# getbuffersize(::Type{<:Union{Flux.Recur,StackedLSTMCell}},
+#  				state::AbstractArray, x) = ((length(state), size(x, 2)), 1)
+# getbuffersize(::Type{<:Union{Flux.Recur,StackedLSTMCell}},
+# 				state::Tuple, x) = ((length(state[1]), size(x, 2)), 1)
+# getbuffersize(::Type{<:Union{HiddenRecur}},
+# 				state::Tuple, x) = ((length(state[1]), size(x, 2)), length(state))
 
-function writebuffer(chain::HiddenRecur, x)
-	sizeval, numhidden = getbuffersize(chain, x)
-	out = Flux.Zygote.Buffer(x, numhidden * sizeval[1], sizeval[2])
-	for i = 1:sizeval[2]
-	  out[:,i] = cat(chain(x[:,i])...; dims=1)
-	end
-	output = copy(out)
-	return [output[i * sizeval[1] + 1:(i + 1) * sizeval[1],:] for i = 0:numhidden - 1]
-end
+# function writebuffer(chain::HiddenRecur, x)
+# 	sizeval, numhidden = getbuffersize(chain, x)
+# 	out = Flux.Zygote.Buffer(x, numhidden * sizeval[1], sizeval[2])
+# 	for i = 1:sizeval[2]
+# 	  out[:,i] = cat(chain(x[:,i])...; dims=1)
+# 	end
+# 	output = copy(out)
+# 	return [output[i * sizeval[1] + 1:(i + 1) * sizeval[1],:] for i = 0:numhidden - 1]
+# end
 
-function writebuffer(chain, x)
-	sizeval, numhidden = getbuffersize(chain, x)
-	out = Flux.Zygote.Buffer(x, sizeval)
-	for i = 1:sizeval[2]
-	  out[:,i] = chain(x[:,i])
-	end
-	return copy(out)
-end
+# function writebuffer(chain, x)
+# 	sizeval, numhidden = getbuffersize(chain, x)
+# 	out = Flux.Zygote.Buffer(x, sizeval)
+# 	for i = 1:sizeval[2]
+# 	  out[:,i] = chain(x[:,i])
+# 	end
+# 	return copy(out)
+# end
 
-function (l::Seq)(::Flux.CUDA.CuArray, _, x)
-	l.state = writebuffer(l.chain, x)
-	return l.state
-end
+# function (l::Seq)(::Flux.CUDA.CuArray, _, x)
+# 	l.state = writebuffer(l.chain, x)
+# 	return l.state
+# end
 
-function (l::Seq)(::Tuple{Flux.CUDA.CuArray,Flux.CUDA.CuArray}, _, x)
-	l.state = writebuffer(l.chain, x)
-	return l.state
-end
+# function (l::Seq)(::Tuple{Flux.CUDA.CuArray,Flux.CUDA.CuArray}, _, x)
+# 	l.state = writebuffer(l.chain, x)
+# 	return l.state
+# end
 
 function Base.show(io::IO, l::Seq)
     print(io, "Seq(", l.chain)
