@@ -28,3 +28,15 @@ end
     @test repr(LSTnet(10, 2, 3, 10, 20)) == "LSTnet(10, 2, 3, 10, 20)"
     @test repr(FluxArchitectures.ReluGRU(20, 10)) == "Recur(ReluGRUCell(20, 10))"
 end
+
+@testset "trainable" begin
+    inputsize = 20
+    poollength = 10
+    datalength = 100
+    x = rand(Float32, inputsize, poollength, 1, datalength)
+    m = LSTnet(inputsize, 2, 3, poollength, 20)
+    @no_error bw_cpu(m, x)
+    if Flux.CUDA.functional()
+        @no_error bw_gpu(m, x)
+    end
+end

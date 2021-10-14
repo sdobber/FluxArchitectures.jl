@@ -17,3 +17,15 @@ end
     @test_throws ArgumentError FluxArchitectures.Local_SelfAttn(10, 10, 3, 3, 4, 1, 3, 3, 2)
     @test_throws ArgumentError DSANet(10, 10, 3, 3, 4, 1, 3, 2, 20)
 end
+
+@testset "trainable" begin
+    inputsize = 20
+    poollength = 10
+    datalength = 100
+    x = rand(Float32, inputsize, poollength, 1, datalength)
+    m = DSANet(inputsize, poollength, 3, 3, 4, 1, 3, 2)
+    @no_error bw_cpu(m, x)
+    if Flux.CUDA.functional()
+        @no_error bw_gpu(m, x)
+    end
+end
