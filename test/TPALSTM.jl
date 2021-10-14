@@ -23,8 +23,8 @@ end
     datalength = 100
     x = rand(Float32, inputsize, poollength, 1, datalength)
     m = TPALSTM(inputsize, 10, poollength, 2, 32, 1)
-    @no_error bw_cpu(m, x)
+    @test @no_error bw_cpu(m, x)
     if Flux.CUDA.functional()
-        @no_error bw_gpu(m, x)
+        @test @no_error bw_gpu(m, x)
     end
 end
