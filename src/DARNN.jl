@@ -164,7 +164,7 @@ function darnn_decoder(m::DARNNCell, input_encoded, input_data)
 	          a -> m.decoder_attn(reshape(a, (2 * m.decodersize + m.encodersize, :))) |>
 	          a -> Flux.softmax(reshape(a, (m.poollength, :)))
 	      context = dropdims(NNlib.batched_mul(input_encoded, Flux.unsqueeze(x, 2)), dims=2)
-	      ỹ = m.decoder_fc(cat(context, input_data[m.orig_idx,t,:]', dims=1))
+	      ỹ = m.decoder_fc(cat(context, permutedims(input_data[m.orig_idx,t,:]), dims=1))
 	      _ = m.decoder_lstm(ỹ)
 	end
 	return context
