@@ -139,7 +139,7 @@ function _encoder(m::DARNNCell, input_data, slice)
 end
 
 function darnn_encoder(m::DARNNCell, input_data::AbstractArray)
-	arr = [Flux.unsqueeze(_encoder(m, input_data, input_data[:,t,:]), 2) for t = 1:m.poollength]
+	arr = [Flux.unsqueeze(_encoder(m, input_data, view(input_data, :, t, :)), 2) for t = 1:m.poollength]
 	return cat(arr...; dims=2)
 end
 
