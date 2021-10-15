@@ -64,14 +64,13 @@ end
 Flux.trainable(m::TPALSTMCell) = (m.embedding, m.output, m.lstm, m.attention_linear1,
  				m.attention_linear2, m.attention_conv)
 Flux.reset!(m::TPALSTMCell) = Flux.reset!(m.lstm.chain)
-Flux.@functor TPALSTMCell # embedding, output, lstm, attention_linear1, attention_linear2, attention_conv,
+Flux.@functor TPALSTMCell
 
 # Attention part of the network
 function _TPALSTM_attention(H, h_last, m::TPALSTMCell)
     H_u = Flux.unsqueeze(H, 3)
     conv_vecs = Flux.relu.(dropdims(m.attention_conv(H_u), dims=2))
-    w = m.attention_linear1(h_last) |>
-            a -> Flux.unsqueeze(a, 1)
+    w = m.attention_linear1(h_last) |> Flux.unsqueeze(1)
     alpha = Flux.sigmoid.(sum(conv_vecs .* w, dims=2))
     v = dropdims(sum(alpha .* conv_vecs, dims=1), dims=1)
     concat = cat(h_last, v, dims=1)
@@ -80,7 +79,7 @@ end
 
 # Get the pooled hidden state from feeding it to the LSTM cell
 function _TPALSTM_gethidden(inp, m::TPALSTMCell)
-    return cat([_add_dims(m.lstm(m.embedding(inp[:,t,:]))) for t in 1:m.poollength - 1]...; dims=2)
+    return cat([_add_dims(m.lstm(m.embedding(view(inp, :, t, :)))) for t in 1:m.poollength - 1]...; dims=2)
 end
 
 # Model output
@@ -88,9 +87,8 @@ function (m::TPALSTMCell)(x)
     inp = dropdims(x, dims=3)
     H_raw = _TPALSTM_gethidden(inp, m)
 	H = Flux.relu.(H_raw)
-    x = inp[:,end,:]
-    xconcat = m.embedding(x)
-    h_last = m.lstm(xconcat)
+    x = view(inp, :, size(inp, 2), :)
+    h_last = m.embedding(x) |> m.lstm
     ht = _TPALSTM_attention(H, h_last, m)
     return m.output(ht)
 end
