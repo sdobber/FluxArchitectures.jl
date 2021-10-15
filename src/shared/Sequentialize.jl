@@ -162,7 +162,7 @@ function writebuffer(::Type{<:Union{AbstractArray}}, l::SeqSkip, x)
 	out[:,1] = h
 	l.state = h
 	for i = 2:sizeval[2]
-	  h, y = l.cell(out[:,max(1, i - l.p)], x[:,i])
+	  h, y = l.cell(out[:, max(1, i - l.p)], view(x, :, i))
 	  l.state = h
 	  out[:,i] = h
 	end
@@ -177,13 +177,13 @@ function writebuffer(::Type{<:Tuple}, l::SeqSkip, x)
 	out[:,1] = vcat(h...)
 	l.state = h
 	for i = 2:sizeval[2]
-		hidden = Tuple([out[j * sizeval[1] + 1:(j + 1) * sizeval[1],max(1, i - l.p)] for j = 0:numhidden - 1 ])
-		h, y = l.cell(hidden, x[:,i])
+		hidden = Tuple([out[j * sizeval[1] + 1:(j + 1) * sizeval[1], max(1, i - l.p)] for j = 0:numhidden - 1 ])
+		h, y = l.cell(hidden, view(x, :, i))
 		l.state = h
 		out[:,i] = vcat(h...)
 	end
 	l.fullstate = copy(out)
-	return l.fullstate[1:sizeval[1],:]
+	return view(l.fullstate, 1:sizeval[1], :)
 end
 # TO DO: For HiddenRecur-type we need writebuffer that outputs `output`
 
