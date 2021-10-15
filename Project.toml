@@ -1,7 +1,7 @@
 name = "FluxArchitectures"
 uuid = "53d20848-f986-4c56-957e-0e417ec068db"
 authors = ["Sören Dobberschütz <sdobberschuetz@gmx.net> and contributors"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 BSON = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
@@ -11,6 +11,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 BSON = "0.3"
@@ -19,6 +20,7 @@ LazyArtifacts = "1"
 Reexport = "1"
 Revise = "3"
 Tables = "1"
+Zygote = "0.6.21"
 julia = "1.6"
 
 [extras]
