@@ -1,6 +1,6 @@
 module FluxArchitectures
 
-import Flux:reset!
+import Flux: reset!, trainable
 
 using Reexport
 @reexport using Flux
