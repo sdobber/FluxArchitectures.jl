@@ -32,7 +32,6 @@ trainable(a::HiddenRecur) = (a.cell,)
 
 Base.show(io::IO, m::HiddenRecur) = print(io, "HiddenRecur(", m.cell, ")")
 Flux.reset!(m::HiddenRecur) = (m.state = m.cell.state0)
-Flux.trainable(m::HiddenRecur) = (m.cell,)
 
 function (m::HiddenRecur)(x::AbstractArray{T,3}) where T
 	h = [m(view(x, :, :, i)) for i in 1:size(x, 3)]
