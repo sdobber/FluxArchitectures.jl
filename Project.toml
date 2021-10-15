@@ -24,7 +24,7 @@ Reexport = "1"
 Revise = "3"
 SliceMap = "0.2"
 Tables = "1"
-Zygote = "0.6.21"
+Zygote = "0.6 - 0.6.21"
 julia = "1.6"
 
 [extras]
