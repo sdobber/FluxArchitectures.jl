@@ -46,10 +46,3 @@ Train the model:
 ```julia
 Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20), ADAM(0.01))
 ```
-
-
-## GPU Calculations
-
-Finally, GPU support for all models has been added! However, it cannot be guaranteed that this is done in an optimal way. Currently, only `DSANet` sees an improvement in training speed on my hardware, whereas all other models train faster on a CPU. The deeper reason is the current limitation of Flux's implementation of RNNs, see [this issue](https://github.com/FluxML/Flux.jl/issues/1365) that affects all models except `DSANet`, which doesn't use recurrence. 
-
-
