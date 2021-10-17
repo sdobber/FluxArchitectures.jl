@@ -22,11 +22,11 @@ The benchmark is run on a [JetsonNano Developer Kit](https://developer.nvidia.co
 
 |          | Forward Pass |           | Backward Pass |            |
 |              | CPU       | GPU           | CPU        | GPU      |
-| ------------ | --------- | ------------- | ---------- | -------- |
-| DARNN        | 91.290 ms | 13.808 s      | 1.810 s    | 39.654 s |
-| DSAnet       | 222.675ms | 556.588 ms    | 796.776 ms | 1.409 s  |
-| LSTNet       | 18.256 ms | 1.452 s       | 428.595 ms | 7.799 s  |
-| TPA-LSTM     | 23.069 ms | 5.632 s       | 1.572 s    | 18.750 s |
+| ------------ | --------- | ------------- | ---------- | -------- | 
+| DARNN        | 68.424 ms | 11.566 s      | 2.626 s    | 35.442 s |
+| DSAnet       | 221.635ms | 614.725 ms    | 791.071 ms | 1.247 s  |
+| LSTNet       | 18.213 ms | 1.379 s       | 460.450 ms | 8.056 s  |
+| TPA-LSTM     | 23.392 ms | 5.427 s       | 1.512 s    | 18.949 s |
 
 
 ## Intel Core i5 (2.9 GHz)
@@ -36,10 +36,10 @@ The benchmark is run on a [13" MacBook Pro (Late 2016)](https://support.apple.co
 |              | Forward Pass  | Backward Pass|
 |              | CPU           | CPU         |
 | ------------ | ------------- | ----------- |
-| DARNN        | 29.191 ms    | 528.621 ms |
-| DSAnet       | 137.335 ms   | 395.298 ms |
-| LSTNet       | 3.455 ms     | 103.729 ms |
-| TPA-LSTM     | 7.885 ms     | 435.726 ms |
+| DARNN        | 26.010 ms     | 660.677 ms |
+| DSAnet       | 195.302 ms    | 581.881 ms |
+| LSTNet       | 3.411 ms      | 89.231 ms  |
+| TPA-LSTM     | 6.371 ms      | 352.966 ms |
 
 
 ## Technical Details
