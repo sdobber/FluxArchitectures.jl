@@ -4,7 +4,7 @@
 > Image from Shih et. al., "Temporal Pattern Attention for Multivariate Time Series Forecasting", [ArXiv](https://arxiv.org/pdf/1809.04206v2.pdf), 2019.
 
 The Temporal Pattern Attention LSTM network is based on the paper "Temporal Pattern Attention for Multivariate Time
-Series Forecasting" by [Shih et. al.](https://arxiv.org/pdf/1809.04206v2.pdf). It claims to have a better performance than [LSTNet](@ref), with the additional advantage that an attention mechanism automatically tries to determine important parts of the time series, instead of introducing parameters that need to be optimized by the user.
+Series Forecasting" by [Shih et. al.](https://arxiv.org/pdf/1809.04206v2.pdf). It claims to have a better performance than [LSTnet](@ref), with the additional advantage that an attention mechanism automatically tries to determine important parts of the time series, instead of introducing parameters that need to be optimized by the user.
 
 The code is based on a [PyTorch implementation](https://github.com/jingw2/demand_forecast/blob/master/tpa_lstm.py) by Jing Wang of the same model with slight adjustments.
 

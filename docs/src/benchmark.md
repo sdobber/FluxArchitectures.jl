@@ -20,8 +20,7 @@ Currently, only `DSANet` sees an improvement in training speed on a GPU, whereas
 
 The benchmark is run on a [JetsonNano Developer Kit](https://developer.nvidia.com/embedded/jetson-nano-developer-kit) with 4GB of memory.
 
-|          | Forward Pass |           | Backward Pass |            |
-|              | CPU       | GPU           | CPU        | GPU      |
+|          | CPU - Forward | GPU - Forward | CPU - Backward | GPU - Backward |
 | ------------ | --------- | ------------- | ---------- | -------- | 
 | DARNN        | 68.424 ms | 11.566 s      | 2.626 s    | 35.442 s |
 | DSAnet       | 221.635ms | 614.725 ms    | 791.071 ms | 1.247 s  |
@@ -33,8 +32,7 @@ The benchmark is run on a [JetsonNano Developer Kit](https://developer.nvidia.co
 
 The benchmark is run on a [13" MacBook Pro (Late 2016)](https://support.apple.com/kb/SP748?viewlocale=en_US&locale=da_DK) without GPU support.
 
-|              | Forward Pass  | Backward Pass|
-|              | CPU           | CPU         |
+|              | CPU - Forward | CPU - Backward |
 | ------------ | ------------- | ----------- |
 | DARNN        | 26.010 ms     | 660.677 ms |
 | DSAnet       | 195.302 ms    | 581.881 ms |
