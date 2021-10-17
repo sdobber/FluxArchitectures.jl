@@ -101,7 +101,7 @@ Toolchain:
 ```
 
 
-## Intel Core i5 (2.9 GHz )
+### Intel Core i5 (2.9 GHz )
 
 ```
 julia> versioninfo(verbose=true)
