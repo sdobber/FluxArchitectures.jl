@@ -23,6 +23,7 @@ makedocs(;
                      "DSANet" => "models/dsanet.md",
                      "LSTnet" => "models/lstnet.md",
                      "TPALSTM" => "models/tpalstm.md"],
+        "Benchmarks" => "benchmark.md"
         "Reference" => "reference.md",
     ],
 )
