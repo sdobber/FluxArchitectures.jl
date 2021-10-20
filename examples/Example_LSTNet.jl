@@ -30,13 +30,13 @@ model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength,
 # MSE loss
 function loss(x, y)
     Flux.reset!(model)
-    return Flux.mse(model(x), y')
+    return Flux.mse(model(x), permutedims(y))
 end
 
 # Callback for plotting the training
 cb = function ()
     Flux.reset!(model)
-    pred = model(input)' |> cpu
+    pred = model(input) |> permutedims |> cpu
     Flux.reset!(model)
     p1 = plot(pred, label="Predict")
     p1 = plot!(cpu(target), label="Data", title="Loss $(loss(input, target))")

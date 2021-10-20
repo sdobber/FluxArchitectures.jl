@@ -30,7 +30,7 @@ input_gpu, target_gpu = gpu(input_cpu), gpu(target_cpu)
 inputsize = size(input_cpu, 1)
 function loss(x, y)
     Flux.reset!(model)
-    return Flux.mse(model(x), y')
+    return Flux.mse(model(x), permutedims(y))
 end
 
 
