@@ -6,8 +6,7 @@ using Pkg; Pkg.activate(".")
 Pkg.instantiate()
 
 @info "Loading packages"
-include("../src/FluxArchitectures.jl")
-using .FluxArchitectures
+using FluxArchitectures
 using Plots
 
 

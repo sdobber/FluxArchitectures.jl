@@ -5,8 +5,8 @@ cd(@__DIR__)
 using Pkg; Pkg.activate(".")
 Pkg.instantiate()
 
-include("../src/FluxArchitectures.jl")
-using .FluxArchitectures
+@info "Loading packages"
+using FluxArchitectures
 using Plots
 
 # Load some sample data
