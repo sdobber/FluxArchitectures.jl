@@ -13,7 +13,7 @@ using Plots
 # Load some sample data
 @info "Loading data"
 poollength = 10
-horizon = 6
+horizon = 15
 datalength = 500
 input, target = get_data(:solar, poollength, datalength, horizon) |> gpu
 

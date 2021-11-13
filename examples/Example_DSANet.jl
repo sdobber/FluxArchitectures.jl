@@ -13,7 +13,7 @@ using Plots
 # Load some sample data
 @info "Loading data"
 poollength = 10
-horizon = 6
+horizon = 15
 datalength = 4000
 input, target = get_data(:exchange_rate, poollength, datalength, horizon) |> gpu
 
