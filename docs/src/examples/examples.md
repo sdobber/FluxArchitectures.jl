@@ -12,7 +12,7 @@ using FluxArchitectures, Plots
 
 @info "Loading data"
 poollength = 10
-horizon = 6
+horizon = 15
 datalength = 1000
 input, target = get_data(:exchange_rate, poollength, datalength, horizon) |> gpu
 
@@ -48,15 +48,18 @@ Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20), AD
 
 ### Load some sample data
 
-We start out by loading some of the example [Datasets](@ref) - in this case the `:exchange_rate` dataset, a collection of daily exchange rates of eight foreign countries. To speed up training, we only take the first 1000 time steps from the data. We would like to feed the model with a window of 10 past timesteps while at the same time trying to forecast 6 timesteps in the future.
+We start out by loading some of the example [Datasets](@ref) - in this case the `:exchange_rate` dataset, a collection of daily exchange rates of eight foreign countries. To speed up training, we only take the first 1000 time steps from the data. We would like to feed the model with a window of 10 past timesteps while at the same time trying to forecast 15 timesteps in the future.
 ```julia
 using FluxArchitectures, Plots
 
 poollength = 10
-horizon = 6
+horizon = 15
 datalength = 1000
 input, target = get_data(:exchange_rate, poollength, datalength, horizon) |> gpu
 ```
+
+!!! note
+    The `poollength` and `horizon` parameters count "forward" in time, which means that when `horizon` is smaller or equal to `poollength`, then the model has direct access to the value it is supposed to predict.
 
 
 ### Define the neural net and loss
@@ -112,7 +115,7 @@ Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20),
 Use the following settings as as starting point:
 ```julia
 poollength = 10
-horizon = 6
+horizon = 15
 datalength = 500
 input, target = get_data(:solar, poollength, datalength, horizon) |> gpu
 
@@ -130,7 +133,7 @@ and train with `ADAM(0.007)` as optimizer.
 `DSANet` suffers from some numerical instabilities - it can be advisable to try initializing the model with different random seeds. The following settings give an example.
 ```julia
 poollength = 10
-horizon = 6
+horizon = 15
 datalength = 4000
 input, target = get_data(:exchange_rate, poollength, datalength, horizon) |> gpu
 
@@ -153,7 +156,7 @@ Use `ADAM(0.005)` as optimizer.
 Use the following settings on the example data:
 ```julia
 poollength = 10
-horizon = 6
+horizon = 15
 datalength = 2000
 input, target = get_data(:solar, poollength, datalength, horizon) |> gpu
 

@@ -25,6 +25,9 @@ each column contains the time series for one feature). `poollength` defines the 
 timesteps to pool when preparing a single frame of data to be fed to the model. `datalength` 
 determines the number of time steps included into the output, and `horizon` determines the 
 number of time steps that should be forecasted by the model. Outputs features and labels.
+
+Note that when `horizon` is smaller or equal to `poollength`, then the model has direct
+access to the value it is supposed to predict.
 """    
 function prepare_data(data::AbstractMatrix, poollength, datalength, horizon; normalise=true)
     extendedlength = datalength + poollength - 1

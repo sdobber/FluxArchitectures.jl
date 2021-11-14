@@ -32,7 +32,7 @@ in the Julia prompt.
 Activate the package and load some sample-data:
 ```julia
 using FluxArchitectures
-poollength = 10; horizon = 6; datalength = 1000;
+poollength = 10; horizon = 15; datalength = 1000;
 input, target = get_data(:exchange_rate, poollength, datalength, horizon) 
 ```
 
