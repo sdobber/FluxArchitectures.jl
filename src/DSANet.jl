@@ -35,19 +35,24 @@ deviation of each input before applying a per-neuron gain/bias. To avoid numeric
 overflow, the division by the standard deviation has been regularised by
 adding `ϵ = 1E-5`.
 """
-struct Reg_LayerNorm{T}
-  diag::Flux.Diagonal{T}
+struct Reg_LayerNorm{F, A<:AbstractArray, B}
+  diag::Flux.Scale{F, A, B}
 end
 
+# function Diagonal(size::Integer...; kw...)
+#     Base.depwarn("Flux.Diagonal is now Flux.Scale, and also allows an activation function.", :Diagonal)
+#     Scale(size...; kw...)
+#   end
+
 Reg_LayerNorm(h::Integer) =
-  Reg_LayerNorm(Flux.Diagonal(h))
+  Reg_LayerNorm(Flux.Scale(h))
 
 Flux.@functor Reg_LayerNorm
 
 (a::Reg_LayerNorm)(x) = a.diag(regularized_normalise(x))
 
 function Base.show(io::IO, l::Reg_LayerNorm)
-  print(io, "Reg_LayerNorm(", length(l.diag.α), ")")
+  print(io, "Reg_LayerNorm(", length(l.diag.scale), ")")
 end
 
 
