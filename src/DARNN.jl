@@ -148,7 +148,7 @@ function darnn_encoder(m::DARNNCell, input_data::Flux.CUDA.CuArray)
 	input_encoded = Flux.Zygote.Buffer(input_data, m.encodersize, m.poollength,
 	 				size(input_data, 3))
 	@inbounds for t in 1:m.poollength
-	      input_encoded[:,t,:] = Flux.unsqueeze(_encoder(m, input_data, input_data[:,t,:]), 2)
+	      input_encoded[:,t,:] = Flux.unsqueeze(_encoder(m, input_data, input_data[:,t,:]), dims = 2)
 	end
 	return copy(input_encoded)
 end
@@ -164,7 +164,7 @@ function darnn_decoder(m::DARNNCell, input_encoded, input_data)
 	              input_encoded, dims=1) |>
 	          a -> m.decoder_attn(reshape(a, (2 * m.decodersize + m.encodersize, :))) |>
 	          a -> Flux.softmax(reshape(a, (m.poollength, :)))
-	      context = dropdims(NNlib.batched_mul(input_encoded, Flux.unsqueeze(x, 2)), dims=2)
+	      context = dropdims(NNlib.batched_mul(input_encoded, Flux.unsqueeze(x, dims = 2)), dims=2)
 	      ỹ = m.decoder_fc(cat(context, input_data[m.orig_idx,t,:]', dims=1))
 	      _ = m.decoder_lstm(ỹ)
 	end
