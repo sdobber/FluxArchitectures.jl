@@ -39,11 +39,6 @@ struct Reg_LayerNorm{F, A<:AbstractArray, B}
   diag::Flux.Scale{F, A, B}
 end
 
-# function Diagonal(size::Integer...; kw...)
-#     Base.depwarn("Flux.Diagonal is now Flux.Scale, and also allows an activation function.", :Diagonal)
-#     Scale(size...; kw...)
-#   end
-
 Reg_LayerNorm(h::Integer) =
   Reg_LayerNorm(Flux.Scale(h))
 
