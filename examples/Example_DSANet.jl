@@ -2,7 +2,8 @@
 
 # Make sure all the required packages are available
 cd(@__DIR__)
-using Pkg; Pkg.activate(".")
+using Pkg;
+Pkg.activate(".");
 Pkg.instantiate()
 
 @info "Loading packages"
@@ -28,9 +29,9 @@ n_head = 2
 
 # Define the neural net
 @info "Creating model and loss"
-Random.seed!(123)
+Random.seed!(42)
 model = DSANet(inputsize, poollength, local_length, n_kernels, d_model,
-               hiddensize, n_layers, n_head) |> gpu
+    hiddensize, n_layers, n_head) |> gpu
 
 # MSE loss
 function loss(x, y)
@@ -51,8 +52,8 @@ end
 # Training loop
 @info "Starting training"
 @info "Start loss" loss = loss(input, target)
-Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 50),
-             ADAM(0.005), cb=cb)
+Flux.train!(loss, Flux.params(model), Iterators.repeated((input, target), 50),
+    ADAM(0.005), cb=cb)
 
 @info "Finished"
 @info "Final loss" loss = loss(input, target)
