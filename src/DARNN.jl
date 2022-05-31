@@ -4,43 +4,7 @@
 # Based on paper Quin et. al. "A Dual-Stage Attention-Based Recurrent Neural
 # Network for Time Series Prediction" https://arxiv.org/abs/1704.02971
 
-# Copy LSTM Code to prevent its special CUDA implementation
-struct FALSTMCell{A,V,S}
-	Wi::A
-	Wh::A
-	b::V
-	state0::S
-end
-
-function FALSTMCell(in::Integer, out::Integer;
-		init=Flux.glorot_uniform,
-		initb=Flux.zeros32,
-		init_state=Flux.zeros32)
-	cell = FALSTMCell(init(out * 4, in), init(out * 4, out), initb(out * 4), (init_state(out, 1), init_state(out, 1)))
-	cell.b[Flux.gate(out, 2)] .= 1
-	return cell
-end
-
-function (m::FALSTMCell{A,V,<:NTuple{2,AbstractMatrix{T}}})((h, c), x::Union{AbstractVecOrMat{T},Flux.OneHotArray}) where {A,V,T}
-	b, o = m.b, size(h, 1)
-	g = m.Wi * x .+ m.Wh * h .+ b
-	input = σ.(Flux.gate(g, o, 1))
-	forget = σ.(Flux.gate(g, o, 2))
-	cell = tanh.(Flux.gate(g, o, 3))
-	output = σ.(Flux.gate(g, o, 4))
-	c = forget .* c .+ input .* cell
-	h′ = output .* tanh.(c)
-	sz = size(x)
-	return (h′, c), reshape(h′, :, sz[2:end]...)
-end
-
-Flux.@functor FALSTMCell
-Recur(m::FALSTMCell) = Flux.Recur(m, m.state0)
-
-Base.show(io::IO, l::FALSTMCell) =
-	print(io, "FALSTMCell(", size(l.Wi, 2), ", ", size(l.Wi, 1) ÷ 4, ")")
-
-# struct that stores layers and some extra information
+# Struct that stores layers and some extra information
 mutable struct DARNNCell{A,B,C,D,E,F,W,X,Y,Z}
     # Encoder part
 	encoder_lstm::A
@@ -98,12 +62,12 @@ function DARNN(inp::Integer, encodersize::Integer, decodersize::Integer, poollen
 	init=Flux.glorot_uniform, bias=true)
 
 	# Encoder part
-	encoder_lstm = Seq(HiddenRecur(FALSTMCell(inp, encodersize)))
+	encoder_lstm = Seq(HiddenRecur(Flux.LSTMCell(inp, encodersize)))
 	encoder_attn = Chain(Dense(2 * encodersize + poollength, poollength, init=init, bias=bias),
 	                    a -> tanh.(a),
 	                    Dense(poollength, 1, init=init, bias=bias))
 	# Decoder part
-	decoder_lstm = Seq(HiddenRecur(FALSTMCell(1, decodersize)))
+	decoder_lstm = Seq(HiddenRecur(Flux.LSTMCell(1, decodersize)))
 	decoder_attn = Chain(Dense(2 * decodersize + encodersize, encodersize, init=init, bias=bias),
 	                    a -> tanh.(a),
 	                    Dense(encodersize, 1, init=init, bias=bias))
