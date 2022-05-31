@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Benchmarks · FluxArchitectures.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link rel="canonical" href="https://sdobber.github.io/FluxArchitectures.jl/benchmark/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.044/juliamono.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">FluxArchitectures.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../examples/examples/">Examples</a></li><li><a class="tocitem" href="../datasets/datasets/">Datasets</a></li><li><a class="tocitem" href="../functions/">Exported Functions</a></li><li><span class="tocitem">Models</span><ul><li><a class="tocitem" href="../models/darnn/">DARNN</a></li><li><a class="tocitem" href="../models/dsanet/">DSANet</a></li><li><a class="tocitem" href="../models/lstnet/">LSTnet</a></li><li><a class="tocitem" href="../models/tpalstm/">TPALSTM</a></li></ul></li><li class="is-active"><a class="tocitem" href>Benchmarks</a><ul class="internal"><li><a class="tocitem" href="#JetsonNano"><span>JetsonNano</span></a></li><li><a class="tocitem" href="#Intel-Core-i5-(2.9-GHz)"><span>Intel Core i5 (2.9 GHz)</span></a></li><li><a class="tocitem" href="#JuliaHub"><span>JuliaHub</span></a></li><li><a class="tocitem" href="#Technical-Details"><span>Technical Details</span></a></li></ul></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Benchmarks</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Benchmarks</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/sdobber/FluxArchitectures.jl/blob/master/docs/src/benchmark.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Benchmarks"><a class="docs-heading-anchor" href="#Benchmarks">Benchmarks</a><a id="Benchmarks-1"></a><a class="docs-heading-anchor-permalink" href="#Benchmarks" title="Permalink"></a></h1><p>FluxArchitectures is included in the <a href="https://github.com/FluxML/FluxBench.jl">FluxBench</a>-suite, with results available at <a href="https://speed.fluxml.ai/">speed.fluxml.ai</a>. </p><p>To run the benchmarks yourself, add FluxBench as a package and type</p><pre><code class="language-julia hljs">using FluxBench
+FluxBench.submit()</code></pre><p>The following sections give the timings for my own hardware (which is very limited as compared to current state-of-the-art equipment).</p><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>The setup does not ensure consistency in the number of parameters etc. between models - comparisons are only useful between GPU and CPU runs of the same model, and runs for different versions of FluxArchitectures. In addition, as the benchmark only performs a single backward pass, differences between CPU and GPU are not necessarily indicative of actual training performance. </p></div></div><p>Currently, only <code>DSANet</code> sees an improvement in training speed on a GPU, whereas all other models train faster on a CPU. The deeper reason is the current limitation of Flux&#39;s implementation of RNNs, see <a href="https://github.com/FluxML/Flux.jl/issues/1365">this issue</a> that affects all models except <code>DSANet</code>, which doesn&#39;t use recurrence. </p><h2 id="JetsonNano"><a class="docs-heading-anchor" href="#JetsonNano">JetsonNano</a><a id="JetsonNano-1"></a><a class="docs-heading-anchor-permalink" href="#JetsonNano" title="Permalink"></a></h2><p>The benchmark is run on a <a href="https://developer.nvidia.com/embedded/jetson-nano-developer-kit">JetsonNano Developer Kit</a> with 4GB of memory.</p><table><tr><th style="text-align: right"></th><th style="text-align: right">CPU - Forward</th><th style="text-align: right">GPU - Forward</th><th style="text-align: right">CPU - Backward</th><th style="text-align: right">GPU - Backward</th></tr><tr><td style="text-align: right">DARNN</td><td style="text-align: right">91.290 ms</td><td style="text-align: right">13.808 s</td><td style="text-align: right">1.810 s</td><td style="text-align: right">39.654 s</td></tr><tr><td style="text-align: right">DSAnet</td><td style="text-align: right">222.675ms</td><td style="text-align: right">556.588 ms</td><td style="text-align: right">796.776 ms</td><td style="text-align: right">1.409 s</td></tr><tr><td style="text-align: right">LSTNet</td><td style="text-align: right">18.256 ms</td><td style="text-align: right">1.452 s</td><td style="text-align: right">428.595 ms</td><td style="text-align: right">7.799 s</td></tr><tr><td style="text-align: right">TPA-LSTM</td><td style="text-align: right">23.069 ms</td><td style="text-align: right">5.632 s</td><td style="text-align: right">1.572 s</td><td style="text-align: right">18.750 s</td></tr></table><h2 id="Intel-Core-i5-(2.9-GHz)"><a class="docs-heading-anchor" href="#Intel-Core-i5-(2.9-GHz)">Intel Core i5 (2.9 GHz)</a><a id="Intel-Core-i5-(2.9-GHz)-1"></a><a class="docs-heading-anchor-permalink" href="#Intel-Core-i5-(2.9-GHz)" title="Permalink"></a></h2><p>The benchmark is run on a <a href="https://support.apple.com/kb/SP748?viewlocale=en_US&amp;locale=da_DK">13&quot; MacBook Pro (Late 2016)</a> without GPU support.</p><table><tr><th style="text-align: right"></th><th style="text-align: right">CPU - Forward</th><th style="text-align: right">CPU - Backward</th></tr><tr><td style="text-align: right">DARNN</td><td style="text-align: right">29.191 ms</td><td style="text-align: right">528.621 ms</td></tr><tr><td style="text-align: right">DSAnet</td><td style="text-align: right">137.335 ms</td><td style="text-align: right">395.298 ms</td></tr><tr><td style="text-align: right">LSTNet</td><td style="text-align: right">3.455 ms</td><td style="text-align: right">103.729 ms</td></tr><tr><td style="text-align: right">TPA-LSTM</td><td style="text-align: right">7.885 ms</td><td style="text-align: right">435.726 ms</td></tr></table><h2 id="JuliaHub"><a class="docs-heading-anchor" href="#JuliaHub">JuliaHub</a><a id="JuliaHub-1"></a><a class="docs-heading-anchor-permalink" href="#JuliaHub" title="Permalink"></a></h2><p>GPU enabled cloud computing via <a href="https://juliahub.com/">JuliaHub</a>.</p><table><tr><th style="text-align: right"></th><th style="text-align: right">CPU - Forward</th><th style="text-align: right">GPU - Forward</th><th style="text-align: right">CPU - Backward</th><th style="text-align: right">GPU - Backward</th></tr><tr><td style="text-align: right"></td><td style="text-align: right">CPU</td><td style="text-align: right">GPU</td><td style="text-align: right">CPU</td><td style="text-align: right">GPU</td></tr><tr><td style="text-align: right">DARNN</td><td style="text-align: right">57.445 ms</td><td style="text-align: right">3.939 s</td><td style="text-align: right">1.005 s</td><td style="text-align: right">11.189 s</td></tr><tr><td style="text-align: right">DSAnet</td><td style="text-align: right">120.017 ms</td><td style="text-align: right">57.983 s</td><td style="text-align: right">541.940 ms</td><td style="text-align: right">155.569 ms</td></tr><tr><td style="text-align: right">LSTNet</td><td style="text-align: right">3.970 ms</td><td style="text-align: right">384.773 ms</td><td style="text-align: right">131.375 s</td><td style="text-align: right">2.192 s</td></tr><tr><td style="text-align: right">TPA-LSTM</td><td style="text-align: right">7.812 ms</td><td style="text-align: right">1.435 s</td><td style="text-align: right">518.579 ms</td><td style="text-align: right">5.170 s</td></tr></table><h2 id="Technical-Details"><a class="docs-heading-anchor" href="#Technical-Details">Technical Details</a><a id="Technical-Details-1"></a><a class="docs-heading-anchor-permalink" href="#Technical-Details" title="Permalink"></a></h2><p>Version information for Julia and CUDA for the different devices for reference.</p><h3 id="JetsonNano-2"><a class="docs-heading-anchor" href="#JetsonNano-2">JetsonNano</a><a class="docs-heading-anchor-permalink" href="#JetsonNano-2" title="Permalink"></a></h3><pre><code class="nohighlight hljs">julia&gt; versioninfo(verbose=true)
+Julia Version 1.6.2
+Commit 1b93d53fc4 (2021-07-14 15:36 UTC)
+Platform Info:
+  OS: Linux (aarch64-unknown-linux-gnu)
+      Ubuntu 18.04.6 LTS
+  uname: Linux 4.9.140-tegra #1 SMP PREEMPT Tue Oct 27 21:02:37 PDT 2020 aarch64 aarch64
+  CPU: unknown: 
+              speed         user         nice          sys         idle          irq
+       #1   710 MHz      12735 s          0 s        562 s      12506 s        150 s
+       #2   518 MHz       2904 s          0 s        337 s      22803 s         31 s
+       #3  1479 MHz       2901 s          0 s        382 s      22706 s         35 s
+       #4  1479 MHz       2701 s          0 s        350 s      22992 s         22 s
+       
+  Memory: 3.8712120056152344 GB (178.02734375 MB free)
+  Uptime: 2629.0 sec
+  Load Avg:  0.48  0.95  0.97
+  WORD_SIZE: 64
+  LIBM: libopenlibm
+  LLVM: libLLVM-11.0.1 (ORCJIT, cortex-a57)
+Environment:
+  HOME = /home/sdobber
+  TERM = xterm-256color
+  PATH = /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/sdobber/Programme/julia-1.6.2/bin</code></pre><pre><code class="nohighlight hljs">julia&gt; FluxBench.Flux.CUDA.versioninfo()
+CUDA toolkit 10.2.89, local installation
+CUDA driver 10.2.0
+
+Libraries: 
+- CUBLAS: 10.2.2
+- CURAND: 10.1.2
+- CUFFT: 10.1.2
+- CUSOLVER: 10.3.0
+- CUSPARSE: 10.3.1
+- CUPTI: 12.0.0
+- NVML: missing
+- CUDNN: 8.0.0 (for CUDA 10.2.0)
+- CUTENSOR: missing
+
+Toolchain:
+- Julia: 1.6.2
+- LLVM: 11.0.1
+- PTX ISA support: 3.2, 4.0, 4.1, 4.2, 4.3, 5.0, 6.0, 6.1, 6.3, 6.4, 6.5
+- Device capability support: sm_30, sm_32, sm_35, sm_37, sm_50, sm_52, sm_53, sm_60, sm_61, sm_62, sm_70, sm_72, sm_75
+
+1 device:
+  0: NVIDIA Tegra X1 (sm_53, 66.707 MiB / 3.871 GiB available)</code></pre><h3 id="Intel-Core-i5-(2.9-GHz-)"><a class="docs-heading-anchor" href="#Intel-Core-i5-(2.9-GHz-)">Intel Core i5 (2.9 GHz )</a><a id="Intel-Core-i5-(2.9-GHz-)-1"></a><a class="docs-heading-anchor-permalink" href="#Intel-Core-i5-(2.9-GHz-)" title="Permalink"></a></h3><pre><code class="nohighlight hljs">julia&gt; versioninfo(verbose=true)
+Julia Version 1.6.2
+Commit 1b93d53fc4 (2021-07-14 15:36 UTC)
+Platform Info:
+  OS: macOS (x86_64-apple-darwin18.7.0)
+  uname: Darwin 18.7.0 Darwin Kernel Version 18.7.0: Tue Jun 22 19:37:08 PDT 2021; root:xnu-4903.278.70~1/RELEASE_X86_64 x86_64 i386
+  CPU: Intel(R) Core(TM) i5-6267U CPU @ 2.90GHz: 
+              speed         user         nice          sys         idle          irq
+       #1  2900 MHz     206462 s          0 s      94219 s     732080 s          0 s
+       #2  2900 MHz      70845 s          0 s      29756 s     931955 s          0 s
+       #3  2900 MHz     210310 s          0 s      72773 s     749481 s          0 s
+       #4  2900 MHz      60839 s          0 s      25704 s     946013 s          0 s
+       
+  Memory: 16.0 GB (5212.79296875 MB free)
+  Uptime: 1.118083e6 sec
+  Load Avg:  1.67041015625  1.7412109375  1.875
+  WORD_SIZE: 64
+  LIBM: libopenlibm
+  LLVM: libLLVM-11.0.1 (ORCJIT, skylake)
+Environment:
+  JULIA_EDITOR = code
+  JULIA_NUM_THREADS = 4
+  HOME = /Users/sdobber
+  PATH = /usr/local/lib/ruby/gems/2.6.0/bin:/Users/sdobber/.gem/ruby/X.X.0/bin:/usr/local/opt/ruby/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/Library/TeX/texbin:/opt/X11/bin
+  XPC_FLAGS = 0x0
+  TERM = xterm-256color</code></pre><h3 id="JuliaHub-2"><a class="docs-heading-anchor" href="#JuliaHub-2">JuliaHub</a><a class="docs-heading-anchor-permalink" href="#JuliaHub-2" title="Permalink"></a></h3><pre><code class="nohighlight hljs">julia&gt; versioninfo(verbose=true)
+Julia Version 1.6.1
+Commit 6aaedecc44 (2021-04-23 05:59 UTC)
+Platform Info:
+  OS: Linux (x86_64-pc-linux-gnu)
+  uname: Linux 4.14.214-160.339.amzn2.x86_64 #1 SMP Sun Jan 10 05:53:05 UTC 2021 x86_64 x86_64
+  CPU: Intel(R) Xeon(R) CPU E5-2686 v4 @ 2.30GHz: 
+              speed         user         nice          sys         idle          irq
+       #1  2701 MHz       7954 s        769 s       3085 s     521963 s          0 s
+       #2  2700 MHz       8465 s        911 s       3105 s     521471 s          0 s
+       #3  2699 MHz       8316 s        735 s       3098 s     521671 s          0 s
+       #4  2697 MHz       7440 s        632 s       3064 s     522231 s          0 s
+       
+  Memory: 59.95986557006836 GB (51687.2734375 MB free)
+  Uptime: 53773.0 sec
+  Load Avg:  1.0  3.33  2.42
+  WORD_SIZE: 64
+  LIBM: libopenlibm
+  LLVM: libLLVM-11.0.1 (ORCJIT, broadwell)
+Environment:
+  JULIAHUB_USEREMAIL = 
+  JULIAHUB_HOME = /opt/juliahub
+  JULIA_WORKER_TIMEOUT = 360.0
+  JULIARUN_DATA_FOLDER = 378548374194874040
+  JULIARUN_JOB_ID = ooruudwbox
+  JULIA_GR_PROVIDER = BinaryBuilder
+  JULIAHUB_NAMESPACE = 378548374194874040
+  JULIA_NEW_PKG_SERVER = https://juliahub.com/
+  JULIA_DATASETS_PATH = /var/run/secrets/jr-ooruudwboxsecret/DATA_TOML:/opt/juliahub/JuliaHubDataDriver.toml:@:
+  JULIAHUB_USERNAME = Sören Dobberschütz
+  JULIA_DEPOT_PATH = /home/jrun/data/.julia:/home/jrun/.julia
+  JULIARUN_RUN_MODE = script
+  JULIA_HOME = /home/jrun/data/.julia
+  JULIATEAM_HOSTNAME = juliahub.com
+  JULIARUN_RESTART_POLICY = Never
+  JULIA_PKG_SERVER = juliahub.com
+  JULIA_NUM_THREADS = 4
+  JULIA_EDITOR = &quot;/opt/codeserver/lib/code-server/lib/node&quot;
+  JULIAHUB_HOME = /opt/juliahub
+  HOME = /home/jrun
+  JULIA_DATASETS_PATH = /var/run/secrets/jr-ooruudwboxsecret/DATA_TOML:/opt/juliahub/JuliaHubDataDriver.toml:@:
+  TERM = xterm-256color
+  JULIA_DEPOT_PATH = /home/jrun/data/.julia:/home/jrun/.julia
+  LD_LIBRARY_PATH = /usr/lib/x86_64-linux-gnu:/opt/codeserver/lib
+  JULIA_HOME = /home/jrun/data/.julia
+  JRUN_APP_BASE_PATH = /
+  PATH = /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/opt/julia/bin:/usr/lib/x86_64-linux-gnu</code></pre><pre><code class="nohighlight hljs">julia&gt; Flux.CUDA.versioninfo()
+┌ Warning: The NVIDIA driver on this system only supports up to CUDA 11.0.0.
+│ For performance reasons, it is recommended to upgrade to a driver that supports CUDA 11.2 or higher.
+└ @ CUDA ~/data/.julia/packages/CUDA/DL5Zo/src/initialization.jl:42
+CUDA toolkit 11.3.1, artifact installation
+CUDA driver 11.0.0
+NVIDIA driver 450.51.6
+
+Libraries: 
+- CUBLAS: 11.5.1
+- CURAND: 10.2.4
+- CUFFT: 10.4.2
+- CUSOLVER: 11.1.2
+- CUSPARSE: 11.6.0
+- CUPTI: 14.0.0
+- NVML: 11.0.0+450.51.6
+- CUDNN: 8.20.2 (for CUDA 11.4.0)
+  Downloaded artifact: CUTENSOR
+- CUTENSOR: 1.3.0 (for CUDA 11.2.0)
+
+Toolchain:
+- Julia: 1.6.1
+- LLVM: 11.0.1
+- PTX ISA support: 3.2, 4.0, 4.1, 4.2, 4.3, 5.0, 6.0, 6.1, 6.3, 6.4, 6.5, 7.0
+- Device capability support: sm_35, sm_37, sm_50, sm_52, sm_53, sm_60, sm_61, sm_62, sm_70, sm_72, sm_75, sm_80
+
+1 device:
+  0: Tesla K80 (sm_37, 11.170 GiB / 11.173 GiB available)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../models/tpalstm/">« TPALSTM</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.18 on <span class="colophon-date" title="Tuesday 31 May 2022 19:19">Tuesday 31 May 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
