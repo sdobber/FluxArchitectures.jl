@@ -24,7 +24,9 @@ skiplength = 120
 model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength, init=Flux.zeros32, initW=Flux.zeros32) |> gpu
 
 function loss(x, y)
-    Flux.reset!(model)
+    Flux.ChainRulesCore.ignore_derivatives() do
+        Flux.reset!(model)
+    end
     return Flux.mse(model(x), y')
 end
 
@@ -39,7 +41,7 @@ end
 
 @info "Start loss" loss = loss(input, target)
 @info "Starting training"
-Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20), ADAM(0.01), cb=cb)
+Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20), Adam(0.01), cb=cb)
 @info "Final loss" loss = loss(input, target)
 ```
 
@@ -73,10 +75,12 @@ skiplength = 120
 model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength, init=Flux.zeros32, initW=Flux.zeros32) |> gpu
 ```
 
-As the loss function, we use the standard mean squared error loss. To make sure to reset the hidden state for each training loop, we call `Flux.reset!` every time we calculate the loss.
+As the loss function, we use the standard mean squared error loss. To make sure to reset the hidden state for each training loop, we call `Flux.reset!` every time we calculate the loss, and wrap it in `ignore_derivatives()` to exclude the model reset from the derivative calculation.
 ```julia
 function loss(x, y)
-    Flux.reset!(model)
+    Flux.ChainRulesCore.ignore_derivatives() do
+        Flux.reset!(model)
+    end
     return Flux.mse(model(x), y')
 end
 ```
@@ -103,7 +107,7 @@ Finally, we start the training loop and train for 20 epochs.
 @info "Start loss" loss = loss(input, target)
 @info "Starting training"
 Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20),
-            ADAM(0.01), cb=cb)
+            Adam(0.01), cb=cb)
 @info "Final loss" loss = loss(input, target)
 ```
 
@@ -125,7 +129,7 @@ decodersize = 10
 
 model = DARNN(inputsize, encodersize, decodersize, poollength, 1) |> gpu
 ```
-and train with `ADAM(0.007)` as optimizer.
+and train with `Adam(0.007)` as optimizer.
 
 
 ## DSANet Example
@@ -148,7 +152,7 @@ n_head = 2
 Random.seed!(123)
 model = DSANet(inputsize, poollength, local_length, n_kernels, d_model, hiddensize, n_layers, n_head) |> gpu
 ```
-Use `ADAM(0.005)` as optimizer.
+Use `Adam(0.005)` as optimizer.
 
 
 ## TPALSTM Example
@@ -168,4 +172,4 @@ filtersize = 1
 
 model = TPALSTM(inputsize, hiddensize, poollength, layers, filternum, filtersize) |> gpu
 ```
-Train with `ADAM(0.02)`.
+Train with `Adam(0.02)`.

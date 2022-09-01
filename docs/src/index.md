@@ -44,5 +44,5 @@ loss(x, y) = Flux.mse(model(x), y')
 
 Train the model:
 ```julia
-Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20), ADAM(0.01))
+Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20), Adam(0.01))
 ```

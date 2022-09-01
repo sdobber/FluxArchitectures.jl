@@ -2,7 +2,8 @@
 
 # Make sure all the required packages are available
 cd(@__DIR__)
-using Pkg; Pkg.activate(".") 
+using Pkg;
+Pkg.activate(".");
 Pkg.instantiate()
 
 @info "Loading packages"
@@ -28,7 +29,9 @@ model = DARNN(inputsize, encodersize, decodersize, poollength, 1) |> gpu
 
 # MSE loss
 function loss(x, y)
-    Flux.reset!(model)
+    Flux.ChainRulesCore.ignore_derivatives() do
+        Flux.reset!(model)
+    end
     return Flux.mse(model(x), permutedims(y))
 end
 
@@ -45,8 +48,8 @@ end
 # Training loop
 @info "Start loss" loss = loss(input, target)
 @info "Starting training"
-Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 10),
-            ADAM(0.007), cb=cb)
+Flux.train!(loss, Flux.params(model), Iterators.repeated((input, target), 10),
+    Adam(0.007), cb=cb)
 
 @info "Finished"
 @info "Final loss" loss = loss(input, target)
