@@ -30,7 +30,9 @@ model = TPALSTM(inputsize, hiddensize, poollength, layers, filternum, filtersize
 
 # MSE loss
 function loss(x, y)
-    Flux.reset!(model)
+    Flux.ChainRulesCore.ignore_derivatives() do
+        Flux.reset!(model)
+    end
     return Flux.mse(model(x), permutedims(y))
 end
 
@@ -39,8 +41,8 @@ cb = function ()
     Flux.reset!(model)
     pred = model(input) |> permutedims |> cpu
     Flux.reset!(model)
-    p1 = plot(pred, label = "Predict")
-    p1 = plot!(cpu(target), label = "Data", title = "Loss $(loss(input, target))")
+    p1 = plot(pred, label="Predict")
+    p1 = plot!(cpu(target), label="Data", title="Loss $(loss(input, target))")
     display(plot(p1))
 end
 
@@ -48,7 +50,7 @@ end
 @info "Start loss" loss = loss(input, target)
 @info "Starting training"
 Flux.train!(loss, Flux.params(model), Iterators.repeated((input, target), 50),
-    ADAM(0.02), cb = cb)
+    Adam(0.02), cb=cb)
 
 @info "Finished"
 @info "Final loss" loss = loss(input, target)

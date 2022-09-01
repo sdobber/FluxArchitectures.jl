@@ -35,7 +35,9 @@ model = DSANet(inputsize, poollength, local_length, n_kernels, d_model,
 
 # MSE loss
 function loss(x, y)
-    Flux.reset!(model)
+    Flux.ChainRulesCore.ignore_derivatives() do
+        Flux.reset!(model)
+    end
     return Flux.mse(model(x), permutedims(y))
 end
 
@@ -53,7 +55,7 @@ end
 @info "Starting training"
 @info "Start loss" loss = loss(input, target)
 Flux.train!(loss, Flux.params(model), Iterators.repeated((input, target), 50),
-    ADAM(0.005), cb=cb)
+    Adam(0.005), cb=cb)
 
 @info "Finished"
 @info "Final loss" loss = loss(input, target)
