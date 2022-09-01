@@ -15,7 +15,9 @@ skiplength = 120
 model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength, init=Flux.zeros32, initW=Flux.zeros32) |&gt; gpu
 
 function loss(x, y)
-    Flux.reset!(model)
+    Flux.ChainRulesCore.ignore_derivatives() do
+        Flux.reset!(model)
+    end
     return Flux.mse(model(x), y&#39;)
 end
 
@@ -30,7 +32,7 @@ end
 
 @info &quot;Start loss&quot; loss = loss(input, target)
 @info &quot;Starting training&quot;
-Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20), ADAM(0.01), cb=cb)
+Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20), Adam(0.01), cb=cb)
 @info &quot;Final loss&quot; loss = loss(input, target)</code></pre><h2 id="LSTnet-Step-by-step"><a class="docs-heading-anchor" href="#LSTnet-Step-by-step">LSTnet - Step-by-step</a><a id="LSTnet-Step-by-step-1"></a><a class="docs-heading-anchor-permalink" href="#LSTnet-Step-by-step" title="Permalink"></a></h2><h3 id="Load-some-sample-data"><a class="docs-heading-anchor" href="#Load-some-sample-data">Load some sample data</a><a id="Load-some-sample-data-1"></a><a class="docs-heading-anchor-permalink" href="#Load-some-sample-data" title="Permalink"></a></h3><p>We start out by loading some of the example <a href="../../datasets/datasets/#Datasets">Datasets</a> - in this case the <code>:exchange_rate</code> dataset, a collection of daily exchange rates of eight foreign countries. To speed up training, we only take the first 1000 time steps from the data. We would like to feed the model with a window of 10 past timesteps while at the same time trying to forecast 15 timesteps in the future.</p><pre><code class="language-julia hljs">using FluxArchitectures, Plots
 
 poollength = 10
@@ -40,8 +42,10 @@ input, target = get_data(:exchange_rate, poollength, datalength, horizon) |&gt; 
 convlayersize = 2
 recurlayersize = 3
 skiplength = 120
-model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength, init=Flux.zeros32, initW=Flux.zeros32) |&gt; gpu</code></pre><p>As the loss function, we use the standard mean squared error loss. To make sure to reset the hidden state for each training loop, we call <code>Flux.reset!</code> every time we calculate the loss.</p><pre><code class="language-julia hljs">function loss(x, y)
-    Flux.reset!(model)
+model = LSTnet(inputsize, convlayersize, recurlayersize, poollength, skiplength, init=Flux.zeros32, initW=Flux.zeros32) |&gt; gpu</code></pre><p>As the loss function, we use the standard mean squared error loss. To make sure to reset the hidden state for each training loop, we call <code>Flux.reset!</code> every time we calculate the loss, and wrap it in <code>ignore_derivatives()</code> to exclude the model reset from the derivative calculation.</p><pre><code class="language-julia hljs">function loss(x, y)
+    Flux.ChainRulesCore.ignore_derivatives() do
+        Flux.reset!(model)
+    end
     return Flux.mse(model(x), y&#39;)
 end</code></pre><h3 id="Callback-for-plotting-the-training"><a class="docs-heading-anchor" href="#Callback-for-plotting-the-training">Callback for plotting the training</a><a id="Callback-for-plotting-the-training-1"></a><a class="docs-heading-anchor-permalink" href="#Callback-for-plotting-the-training" title="Permalink"></a></h3><p>To observe the training progress, we define the following function to plot the training data and prediction together with the current loss value.</p><pre><code class="language-julia hljs">cb = function ()
     Flux.reset!(model)
@@ -53,7 +57,7 @@ end</code></pre><h3 id="Callback-for-plotting-the-training"><a class="docs-headi
 end</code></pre><h3 id="Training-loop"><a class="docs-heading-anchor" href="#Training-loop">Training loop</a><a id="Training-loop-1"></a><a class="docs-heading-anchor-permalink" href="#Training-loop" title="Permalink"></a></h3><p>Finally, we start the training loop and train for 20 epochs.</p><pre><code class="language-julia hljs">@info &quot;Start loss&quot; loss = loss(input, target)
 @info &quot;Starting training&quot;
 Flux.train!(loss, Flux.params(model),Iterators.repeated((input, target), 20),
-            ADAM(0.01), cb=cb)
+            Adam(0.01), cb=cb)
 @info &quot;Final loss&quot; loss = loss(input, target)</code></pre><p><img src="https://user-images.githubusercontent.com/40642560/133287659-f67a9537-3afa-491a-aaec-c04b24706a8a.gif" alt="LSTnetTrainingExample"/></p><h2 id="DARNN-Example"><a class="docs-heading-anchor" href="#DARNN-Example">DARNN Example</a><a id="DARNN-Example-1"></a><a class="docs-heading-anchor-permalink" href="#DARNN-Example" title="Permalink"></a></h2><p>Use the following settings as as starting point:</p><pre><code class="language-julia hljs">poollength = 10
 horizon = 15
 datalength = 500
@@ -63,7 +67,7 @@ inputsize = size(input, 1)
 encodersize = 10
 decodersize = 10
 
-model = DARNN(inputsize, encodersize, decodersize, poollength, 1) |&gt; gpu</code></pre><p>and train with <code>ADAM(0.007)</code> as optimizer.</p><h2 id="DSANet-Example"><a class="docs-heading-anchor" href="#DSANet-Example">DSANet Example</a><a id="DSANet-Example-1"></a><a class="docs-heading-anchor-permalink" href="#DSANet-Example" title="Permalink"></a></h2><p><code>DSANet</code> suffers from some numerical instabilities - it can be advisable to try initializing the model with different random seeds. The following settings give an example.</p><pre><code class="language-julia hljs">poollength = 10
+model = DARNN(inputsize, encodersize, decodersize, poollength, 1) |&gt; gpu</code></pre><p>and train with <code>Adam(0.007)</code> as optimizer.</p><h2 id="DSANet-Example"><a class="docs-heading-anchor" href="#DSANet-Example">DSANet Example</a><a id="DSANet-Example-1"></a><a class="docs-heading-anchor-permalink" href="#DSANet-Example" title="Permalink"></a></h2><p><code>DSANet</code> suffers from some numerical instabilities - it can be advisable to try initializing the model with different random seeds. The following settings give an example.</p><pre><code class="language-julia hljs">poollength = 10
 horizon = 15
 datalength = 4000
 input, target = get_data(:exchange_rate, poollength, datalength, horizon) |&gt; gpu
@@ -77,7 +81,7 @@ n_layers = 3
 n_head = 2
 
 Random.seed!(123)
-model = DSANet(inputsize, poollength, local_length, n_kernels, d_model, hiddensize, n_layers, n_head) |&gt; gpu</code></pre><p>Use <code>ADAM(0.005)</code> as optimizer.</p><h2 id="TPALSTM-Example"><a class="docs-heading-anchor" href="#TPALSTM-Example">TPALSTM Example</a><a id="TPALSTM-Example-1"></a><a class="docs-heading-anchor-permalink" href="#TPALSTM-Example" title="Permalink"></a></h2><p>Use the following settings on the example data:</p><pre><code class="language-julia hljs">poollength = 10
+model = DSANet(inputsize, poollength, local_length, n_kernels, d_model, hiddensize, n_layers, n_head) |&gt; gpu</code></pre><p>Use <code>Adam(0.005)</code> as optimizer.</p><h2 id="TPALSTM-Example"><a class="docs-heading-anchor" href="#TPALSTM-Example">TPALSTM Example</a><a id="TPALSTM-Example-1"></a><a class="docs-heading-anchor-permalink" href="#TPALSTM-Example" title="Permalink"></a></h2><p>Use the following settings on the example data:</p><pre><code class="language-julia hljs">poollength = 10
 horizon = 15
 datalength = 2000
 input, target = get_data(:solar, poollength, datalength, horizon) |&gt; gpu
@@ -88,4 +92,4 @@ layers = 2
 filternum = 32
 filtersize = 1
 
-model = TPALSTM(inputsize, hiddensize, poollength, layers, filternum, filtersize) |&gt; gpu</code></pre><p>Train with <code>ADAM(0.02)</code>.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../../datasets/datasets/">Datasets »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Monday 29 August 2022 14:07">Monday 29 August 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+model = TPALSTM(inputsize, hiddensize, poollength, layers, filternum, filtersize) |&gt; gpu</code></pre><p>Train with <code>Adam(0.02)</code>.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../../datasets/datasets/">Datasets »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Thursday 1 September 2022 18:55">Thursday 1 September 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
