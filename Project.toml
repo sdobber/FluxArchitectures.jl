@@ -1,7 +1,7 @@
 name = "FluxArchitectures"
 uuid = "53d20848-f986-4c56-957e-0e417ec068db"
 authors = ["Sören Dobberschütz <sdobberschuetz@gmx.net> and contributors"]
-version = "0.2.3"
+version = "0.2.4"
 
 [deps]
 BSON = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
