@@ -11,8 +11,8 @@ forecasted by the model.
 
 See also: [`prepare_data`](@ref), [`load_data`](@ref)
 """
-get_data(dataset, poollength, datalength, horizon; normalise=true) = 
-    prepare_data(load_data(dataset), poollength, datalength, horizon; normalise=normalise)
+get_data(dataset, poollength, datalength, horizon; normalise=true) =
+  prepare_data(load_data(dataset), poollength, datalength, horizon; normalise=normalise)
 
 
 """
@@ -24,24 +24,25 @@ Tables.jl compatible datasource containing data in the form `timesteps x feature
 each column contains the time series for one feature). `poollength` defines the number of 
 timesteps to pool when preparing a single frame of data to be fed to the model. `datalength` 
 determines the number of time steps included into the output, and `horizon` determines the 
-number of time steps that should be forecasted by the model. Outputs features and labels.
+number of time steps that should be forecasted by the model. The label data is assumed to be 
+contained in the first column. Outputs features and labels.
 
 Note that when `horizon` is smaller or equal to `poollength`, then the model has direct
 access to the value it is supposed to predict.
-"""    
+"""
 function prepare_data(data::AbstractMatrix, poollength, datalength, horizon; normalise=true)
-    extendedlength = datalength + poollength - 1
-    extendedlength > size(data, 1) && throw(ArgumentError("datalength $(datalength) larger than available data $(size(data, 1) - poollength + 1)"))
-    (normalise == true) && (data = Flux.normalise(data, dims=1))
-    features = similar(data, size(data, 2), poollength, 1, datalength)
-    for i in 1:datalength
-      features[:,:,:,i] .= permutedims(data[i:(i + poollength - 1) ,:])
-    end
-    labels = circshift(data[1:datalength,1], -horizon)
-    return features, labels
+  extendedlength = datalength + poollength - 1
+  extendedlength > size(data, 1) && throw(ArgumentError("datalength $(datalength) larger than available data $(size(data, 1) - poollength + 1)"))
+  normalise && (data = Flux.normalise(data, dims=1))
+  features = similar(data, size(data, 2), poollength, 1, datalength)
+  for i in 1:datalength
+    features[:, :, :, i] .= permutedims(data[i:(i+poollength-1), :])
+  end
+  labels = circshift(data[1:datalength, 1], -horizon)
+  return features, labels
 end
 
-prepare_data(data, poollength, datalength, horizon; normalise=true) = prepare_data(Tables.matrix(data), poollength, datalength, horizon; normalise=true)
+prepare_data(data, poollength, datalength, horizon; normalise=true) = prepare_data(Tables.matrix(data), poollength, datalength, horizon; normalise=normalise)
 
 
 """
@@ -67,15 +68,15 @@ is included:
 * `:exchange_rate`: The collection of daily exchange rates of eight foreign countries 
   including Australia, Great Britain, Canada, Switzerland, China, Japan, New Zealand and 
   Singapore ranging from 1990 to 2016.
-"""   
+"""
 function load_data(dataset)
-    admissible = [:solar, :traffic, :exchange_rate, :electricity]
-    dataset in admissible || throw(ArgumentError("Sample data $dataset not found"))
+  admissible = [:solar, :traffic, :exchange_rate, :electricity]
+  dataset in admissible || throw(ArgumentError("Sample data $dataset not found"))
 
-    datadir = joinpath(artifact"sample_data", "data")
-    (dataset == :solar) && (BSON.@load joinpath(datadir, "solar_AL.bson") inp_raw)
-    (dataset == :traffic) && (BSON.@load joinpath(datadir, "traffic.bson") inp_raw)
-    (dataset == :exchange_rate) && (BSON.@load joinpath(datadir, "exchange_rate.bson") inp_raw)
-    (dataset == :electricity) && (BSON.@load joinpath(datadir, "electricity.bson") inp_raw)
-    return inp_raw
+  datadir = joinpath(artifact"sample_data", "data")
+  (dataset == :solar) && (BSON.@load joinpath(datadir, "solar_AL.bson") inp_raw)
+  (dataset == :traffic) && (BSON.@load joinpath(datadir, "traffic.bson") inp_raw)
+  (dataset == :exchange_rate) && (BSON.@load joinpath(datadir, "exchange_rate.bson") inp_raw)
+  (dataset == :electricity) && (BSON.@load joinpath(datadir, "electricity.bson") inp_raw)
+  return inp_raw
 end
