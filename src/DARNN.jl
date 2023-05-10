@@ -103,7 +103,7 @@ function _encoder(m::DARNNCell, input_data, slice)
 end
 
 function darnn_encoder(m::DARNNCell, input_data::Array)
-    sl = Slices(input_data, True(), False(), True())
+    sl = JuliennedArrays.Slices(input_data, True(), False(), True())
     fun = s -> _encoder(m, input_data, s)
     return Align(map(fun, sl), True(), False(), True())
 end
