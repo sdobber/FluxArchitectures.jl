@@ -5,6 +5,7 @@ version = "0.2.4"
 
 [deps]
 BSON = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 JuliennedArrays = "5cadff95-7770-533d-a838-a1bf817ee6e0"
 LazyArtifacts = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
@@ -25,7 +26,7 @@ Revise = "3"
 SliceMap = "0.2"
 Tables = "1"
 Zygote = "<0.6.44"
-julia = "1.6, 1.7, 1.8"
+julia = "1.6, 1.7, 1.8, 1.9"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
