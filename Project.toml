@@ -18,6 +18,7 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 BSON = "0.3"
+DelimitedFiles = "1"
 Flux = "0.13"
 JuliennedArrays = "0.2, 0.3"
 LazyArtifacts = "1"
