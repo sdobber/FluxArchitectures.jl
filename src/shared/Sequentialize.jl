@@ -96,12 +96,12 @@ function writebuffer(chain, x)
     return copy(out)
 end
 
-function (l::Seq)(::Flux.CUDA.CuArray, _, x)
+function (l::Seq)(::CUDA.CuArray, _, x)
     l.state = writebuffer(l.chain, x)
     return l.state
 end
 
-function (l::Seq)(::Tuple{Flux.CUDA.CuArray,Flux.CUDA.CuArray}, _, x)
+function (l::Seq)(::Tuple{CUDA.CuArray,CUDA.CuArray}, _, x)
     l.state = writebuffer(l.chain, x)
     return l.state
 end

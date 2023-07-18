@@ -88,7 +88,7 @@ Environment:
 ```
 
 ```
-julia> FluxBench.Flux.CUDA.versioninfo()
+julia> FluxBench.CUDA.versioninfo()
 CUDA toolkit 10.2.89, local installation
 CUDA driver 10.2.0
 
@@ -199,7 +199,7 @@ Environment:
 ```
 
 ```
-julia> Flux.CUDA.versioninfo()
+julia> CUDA.versioninfo()
 ┌ Warning: The NVIDIA driver on this system only supports up to CUDA 11.0.0.
 │ For performance reasons, it is recommended to upgrade to a driver that supports CUDA 11.2 or higher.
 └ @ CUDA ~/data/.julia/packages/CUDA/DL5Zo/src/initialization.jl:42

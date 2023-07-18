@@ -29,7 +29,7 @@ function darnn_init(m::DARNNCell, x)
     m.decoder_lstm(simarray(x, 1, s[4]))
     return nothing
 end
-simarray(x::Flux.CUDA.CuArray, size...) = Flux.CUDA.zeros(eltype(x), size...)
+simarray(x::CUDA.CuArray, size...) = CUDA.zeros(eltype(x), size...)
 simarray(x, size...) = zeros(eltype(x), size...)
 
 Flux.ChainRulesCore.@non_differentiable darnn_init(m, x)
@@ -108,7 +108,7 @@ function darnn_encoder(m::DARNNCell, input_data::Array)
     return Align(map(fun, sl), True(), False(), True())
 end
 
-function darnn_encoder(m::DARNNCell, input_data::Flux.CUDA.CuArray)
+function darnn_encoder(m::DARNNCell, input_data::CUDA.CuArray)
     input_encoded = Flux.Zygote.Buffer(input_data, m.encodersize, m.poollength,
         size(input_data, 3))
     @inbounds for t in 1:m.poollength
@@ -147,7 +147,7 @@ end
 
 # Helper functions to replace `repeat` with CUDA friendly version
 darnn_getones(x::Array, size) = Flux.ones32(1, 1, size)
-darnn_getones(x::Flux.CUDA.CuArray, size) = Flux.CUDA.ones(1, 1, size)
+darnn_getones(x::CUDA.CuArray, size) = CUDA.ones(1, 1, size)
 darnn_getones(x) = darnn_getones(x, size(x, 1))
 Flux.ChainRulesCore.@non_differentiable darnn_getones(x, sz)
 Flux.ChainRulesCore.@non_differentiable darnn_getones(x)

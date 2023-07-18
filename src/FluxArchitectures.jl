@@ -6,6 +6,7 @@ using Reexport
 @reexport using Flux
 
 using BSON
+using CUDA, cuDNN
 using JuliennedArrays
 using SliceMap
 using LazyArtifacts

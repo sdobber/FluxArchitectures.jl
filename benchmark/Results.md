@@ -68,7 +68,7 @@ Status `D:\Dokumente\Soeren Programmieren\FluxArchitectures\benchmark\Project.to
 ```
 
 ```julia-repl
-Flux.CUDA.versioninfo()
+CUDA.versioninfo()
 CUDA toolkit 10.2.89, artifact installation
 CUDA driver 10.2.0
 NVIDIA driver 430.86.0
@@ -174,7 +174,7 @@ Status `D:\Dokumente\Soeren Programmieren\FluxArchitectures\benchmark\Project.to
 ```
 
 ```julia-repl
-Flux.CUDA.versioninfo()
+CUDA.versioninfo()
 CUDA toolkit 10.2.89, artifact installation
 CUDA driver 10.2.0
 NVIDIA driver 430.86.0
