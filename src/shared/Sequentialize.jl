@@ -12,7 +12,7 @@
 in the background. As opposed to `Recur`, it returns the both the hidden state and the
 cell state.
 
-See also: [`Flux.Recur`](@ref)
+See also: `Flux.Recur`
 """
 mutable struct HiddenRecur{T,S}
     cell::T
@@ -52,20 +52,20 @@ getbuffersize(chain, x) = getbuffersize(typeof(chain), chain.state, x)
 
 # CPU Arrays
 function (l::Seq)(::Array, _, x)
-    l.state = Align(map(l.chain, JuliennedArrays.Slices(x, True(), False())), 1)
+    l.state = stack(map(l.chain, eachslice(x, dims=2)), dims=2)
     return l.state
 end
 function (l::Seq)(::Array, ::Flux.Recur, x)
-    l.state = Align(map(l.chain, JuliennedArrays.Slices(x, True(), False())), 1)
+    l.state = stack(map(l.chain, eachslice(x, dims=2)), dims=2)
     return l.state
 end
 function (l::Seq)(::Tuple, ::Flux.Recur, x)
-    l.state = Align(map(l.chain, JuliennedArrays.Slices(x, True(), False())), 1)
+    l.state = stack(map(l.chain, eachslice(x, dims=2)), dims=2)
     return l.state
 end
 function (l::Seq)(::Tuple, _, x)
-    tuples = map(l.chain, JuliennedArrays.Slices(x, True(), False()))
-    l.state = [Align(map(x -> dropdims(x[i], dims=2), tuples), 1) for i in 1:length(l.chain.state)]
+    tuples = map(l.chain, eachslice(x, dims=2))
+    l.state = [stack(map(x -> dropdims(x[i], dims=2), tuples), dims=2) for i in 1:length(l.chain.state)]
     return l.state
 end
 
@@ -131,7 +131,7 @@ current hidden state. This structure combines functionality of `Recur` in that i
 recurrent neural network cell stateful, as well as `Seq` in that it feeds matrices of
 input features as elements of a time series.
 
-See also: [`Seq`](@ref), [`Flux.Recur`](@ref)
+See also: [`Seq`](@ref), `Flux.Recur`
 """
 mutable struct SeqSkip{T,P}
     cell::T
