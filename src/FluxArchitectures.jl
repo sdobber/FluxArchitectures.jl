@@ -6,8 +6,6 @@ using Reexport
 @reexport using Flux
 
 using BSON
-using JuliennedArrays
-using SliceMap
 using LazyArtifacts
 
 import Tables
